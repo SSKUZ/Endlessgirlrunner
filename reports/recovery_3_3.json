@@ -1,0 +1,75 @@
+{
+  "task": "3.3",
+  "stage": "recovery before character edits",
+  "remote_initial_head": "8dda6a7301e549414ae6de5daff536eb66370f82",
+  "local_unpushed_commit": "e598a1b",
+  "sessions": [
+    {
+      "session": "first",
+      "files": {
+        "tools/render_character_qa.py": {
+          "bytes": 4528,
+          "sha256": "79da44dbdb5bb27a6ef7575aec5425fb2179681c1760185996b983c4213226a7"
+        },
+        "tools/redesign_characters.py": {
+          "bytes": 34128,
+          "sha256": "985718c617eca200c721a4e2b385f94e93a904a93cd35c956a65298987368003"
+        },
+        "assets/characters/girl_avatar_v2.glb": {
+          "bytes": 4688892,
+          "sha256": "bac5a040adb016f0f340d189b7bbdce1e28d9a21b84cd79817c60593076d84fb"
+        },
+        "assets/characters/boy_avatar_v2.glb": {
+          "bytes": 5095932,
+          "sha256": "2de5874afeef327129f8e809b17f385eb18f47db84417acf0ccbf60d2621eaad"
+        }
+      }
+    },
+    {
+      "session": "second",
+      "files": {
+        "tools/render_character_qa.py": {
+          "bytes": 4528,
+          "sha256": "79da44dbdb5bb27a6ef7575aec5425fb2179681c1760185996b983c4213226a7"
+        },
+        "tools/redesign_characters.py": {
+          "bytes": 34128,
+          "sha256": "985718c617eca200c721a4e2b385f94e93a904a93cd35c956a65298987368003"
+        },
+        "assets/characters/girl_avatar_v2.glb": {
+          "bytes": 4688892,
+          "sha256": "bac5a040adb016f0f340d189b7bbdce1e28d9a21b84cd79817c60593076d84fb"
+        },
+        "assets/characters/boy_avatar_v2.glb": {
+          "bytes": 5095932,
+          "sha256": "2de5874afeef327129f8e809b17f385eb18f47db84417acf0ccbf60d2621eaad"
+        }
+      }
+    },
+    {
+      "session": "third",
+      "files": {
+        "tools/render_character_qa.py": {
+          "bytes": 4528,
+          "sha256": "79da44dbdb5bb27a6ef7575aec5425fb2179681c1760185996b983c4213226a7"
+        },
+        "tools/redesign_characters.py": {
+          "bytes": 34128,
+          "sha256": "985718c617eca200c721a4e2b385f94e93a904a93cd35c956a65298987368003"
+        },
+        "tools/generate_characters_v1.py": {
+          "bytes": 16987,
+          "sha256": "15ac20bab77b0365075f3d4ede86e3ae66b0aba74b3e2c33385d17621fd7386a"
+        },
+        "assets/characters/girl_avatar_v2.glb": {
+          "bytes": 4688892,
+          "sha256": "bac5a040adb016f0f340d189b7bbdce1e28d9a21b84cd79817c60593076d84fb"
+        },
+        "assets/characters/boy_avatar_v2.glb": {
+          "bytes": 5095932,
+          "sha256": "2de5874afeef327129f8e809b17f385eb18f47db84417acf0ccbf60d2621eaad"
+        }
+      }
+    }
+  ]
+}
