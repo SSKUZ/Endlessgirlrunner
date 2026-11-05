@@ -31,6 +31,7 @@ const rigs={},loading={},keys={},joy={x:0,y:0};
 let heroIndex=0,itemIndex=0,step='hero',mode='select',environment=null,avatar=null,companion=null;
 let level=0,score=0,totalScore=0,lives=5,spawn=.6,shot=0,invul=0,time=0,pendingThrow=null,transition=0;
 let catList=[],shots=[],catPool=[],shotPools={sausage:[],plane:[],bomb:[]},firing=false;
+let boss=null,bossDefeated=false;
 let bombSelected=false,nextCatId=1,nextCatVariant=0,effects=[],effectPool=[],tutorialIndex=0,tutorialTimer=0;
 let heading=0,cameraYaw=0,cameraPitch=.27,cameraDistance=5,noticeUntil=0;
 const cameraAnchor=new T.Vector3(),cameraPointers=new Map();let pinch=null;
@@ -107,7 +108,7 @@ function tutorial(dt){
 }
 function recycleCat(cat){world.remove(cat.o);cat.o.visible=false;catPool.push(cat);}
 function recycleShot(s){world.remove(s.o);s.o.visible=false;shotPools[s.kind].push(s.o);}
-function clearActors(){catList.forEach(recycleCat);shots.forEach(recycleShot);effects.forEach(e=>{world.remove(e.o);effectPool.push(e.o);});catList=[];shots=[];effects=[];pendingThrow=null;}
+function clearActors(){if(boss){world.remove(boss.o);boss=null;}bossDefeated=false;catList.forEach(recycleCat);shots.forEach(recycleShot);effects.forEach(e=>{world.remove(e.o);effectPool.push(e.o);});catList=[];shots=[];effects=[];pendingThrow=null;}
 function build(){
   clearActors();if(environment){world.remove(environment);environment.userData.dispose?.();}
   environment=buildEnvironment(level);world.add(environment);
@@ -140,7 +141,7 @@ function returnToMenu(){
 }
 function end(win){
   mode='end';$('tutorial').hidden=true;if(avatar)avatar.object.visible=true;resetInput();$('controls').hidden=true;$('end').hidden=false;
-  $('end-title').textContent=win?'Парк снова наш!':'Коты взяли верх';
+  $('end-title').textContent=win?'Котокороль побеждён!':'Коты взяли верх';
   $('end-score').textContent=win?`Все пять уровней пройдены. ${totalScore} котов убежали довольными! Очки: ${progress.points}, HEADSHOT: ${progress.headshots}.`:`Пройдено уровней: ${level}. Убежавших котов: ${totalScore}. Попробуем ещё?`;
 }
 $('again').onclick=returnToMenu;
@@ -148,7 +149,26 @@ function pause(){if(mode!=='play')return;mode='pause';resetInput();$('pause-scre
 function resume(){if(mode!=='pause')return;mode='play';$('pause-screen').hidden=true;$('controls').hidden=false;last=performance.now();}
 $('pause').onclick=pause;$('resume').onclick=resume;$('to-menu').onclick=returnToMenu;
 
+function spawnBoss(){
+  if(boss||bossDefeated||level!==4)return;
+  const o=createCat(1);o.scale.setScalar(2.65);o.position.set(player.position.x,0,player.position.z+12);
+  // A crown attached to the animated head, not to the ground.
+  const crown=new T.Group();crown.position.set(0,.31,0);o.userData.head.add(crown);
+  const gold=new T.MeshStandardMaterial({color:'#ffce36',metalness:.45,roughness:.28});
+  const band=new T.Mesh(new T.CylinderGeometry(.23,.23,.12,12),gold);band.position.y=.04;crown.add(band);
+  for(let i=0;i<5;i++){const a=i*Math.PI*2/5;const tip=new T.Mesh(new T.ConeGeometry(.075,.24,4),gold);tip.position.set(Math.sin(a)*.17,.18,Math.cos(a)*.17);crown.add(tip);}
+  boss={o,hp:6,maxHp:6,hitCooldown:0,phase:0,crown};world.add(o);
+  spawn=999;notice('👑 КОТОКОРОЛЬ! 6 попаданий до победы',3);
+}
+function hitBoss(kind='body'){
+  if(!boss||boss.hitCooldown>0)return false;
+  boss.hp-=kind==='bomb'?2:1;boss.hitCooldown=.38;boss.o.userData.hit?.();
+  boss.crown.rotation.z+=.35;reward('👑 '+Math.max(0,boss.hp)+'/6',true);
+  if(boss.hp<=0){world.remove(boss.o);boss=null;bossDefeated=true;transition=1.5;notice('КОТОКОРОЛЬ ПОБЕЖДЁН!',2);}
+  return true;
+}
 function spawnCat(){
+  if(boss||level===4&&progress.complete)return false;
   if(catList.length>=levels[level].cap)return false;
   // Early levels teach the basics; new behaviours appear gradually.
   const allowed=level===0?[1]:level===1?[1,0,4]:level===2?[1,0,4,3]:level===3?[1,0,4,3,5]:[0,1,2,3,4,5];
@@ -175,7 +195,9 @@ function flee(cat,award=true,kind='body',point=null,fromCompanion=false){
     if(result.counted&&kind==='head'&&!fromCompanion){reward('HEADSHOT! +2',false,point);tutorialAction(5);}
     else if(result.counted&&kind==='body'&&point)reward('+1',false,point);
     if(result.bonusBomb)reward('+1 БОМБОЧКА!',true);
-    hud();if(progress.complete&&!transition){transition=1.25;notice(level===4?'Все коты разбежались!':'Отлично! Идём дальше…',1.2);}
+    hud();if(progress.complete&&!transition){
+      if(level===4){spawnBoss();}else{transition=1.25;notice('Отлично! Идём дальше…',1.2);}
+    }
   }
 }
 function throwItem(){
@@ -212,6 +234,7 @@ function detonate(bomb){
   const o=effectPool.pop()||createExplosion();
   o.position.set(center.x,0,center.z);o.visible=true;o.scale.setScalar(COOP_BLAST_RADIUS/3);
   o.userData.tick(0);world.add(o);effects.push({o,age:0});
+  if(boss&&insideExplosion(center,boss.o.position,COOP_BLAST_RADIUS+1.1))hitBoss('bomb');
   for(const cat of catList){
     if(cat.flee||!insideExplosion(center,cat.o.position,COOP_BLAST_RADIUS))continue;
     const away=cat.o.position.clone().sub(center).setY(0);
@@ -312,6 +335,18 @@ function updateCompanion(dt){
     }
   }
 }
+function updateBoss(dt){
+  if(!boss)return;
+  boss.hitCooldown=Math.max(0,boss.hitCooldown-dt);boss.phase+=dt;
+  const direction=player.position.clone().sub(boss.o.position).setY(0);
+  const distance=direction.length();if(distance>.01)direction.multiplyScalar(1/distance);
+  const speed=1.55+(Math.sin(boss.phase*1.4)>.75?.8:0);
+  if(distance>1.55)boss.o.position.addScaledVector(direction,speed*dt);
+  if(distance<1.6&&invul<=0){lives=Math.max(0,lives-1);invul=INVULNERABILITY;avatar.hit();hud();notice('Котокороль атакует! −1 жизнь',1.5);if(!lives){end(false);return;}}
+  boss.o.rotation.y=dampAngle(boss.o.rotation.y,Math.atan2(direction.x,direction.z),6,dt);
+  boss.o.userData.animate(dt,speed,time,false);
+  boss.crown.rotation.z=T.MathUtils.damp(boss.crown.rotation.z,0,3,dt);
+}
 function updateCats(dt){
   for(let i=catList.length-1;i>=0;i--){
     const c=catList[i];let dir,speed=c.speed;
@@ -382,7 +417,16 @@ function updateShots(dt){
       if(candidate&&(!impact||candidate.fraction<impact.fraction))impact={cat:c,...candidate};
     }
     if(impact)flee(impact.cat,true,impact.head?'head':'body',impact.point,!!s.companion);
-    if(impact||s.life<=0||s.o.position.y<.07){recycleShot(s);shots.splice(i,1);}
+    let bossImpact=false;
+    if(!impact&&boss&&boss.hitCooldown<=0){
+      const dx=s.o.position.x-boss.o.position.x,dz=s.o.position.z-boss.o.position.z;
+      const px=s.previous.x-boss.o.position.x,pz=s.previous.z-boss.o.position.z;
+      const vx=dx-px,vz=dz-pz;
+      const t=Math.max(0,Math.min(1,-(px*vx+pz*vz)/Math.max(1e-8,vx*vx+vz*vz)));
+      const horizontal=Math.hypot(px+vx*t,pz+vz*t);
+      if(horizontal<1.1&&Math.min(s.previous.y,s.o.position.y)<2.6&&Math.max(s.previous.y,s.o.position.y)>.2){bossImpact=hitBoss('body');}
+    }
+    if(impact||bossImpact||s.life<=0||s.o.position.y<.07){recycleShot(s);shots.splice(i,1);}
   }
   for(let i=effects.length-1;i>=0;i--){const e=effects[i];e.age+=dt;e.o.userData.tick(e.age);if(e.age>=1.1){world.remove(e.o);e.o.visible=false;effectPool.push(e.o);effects.splice(i,1);}}
 }
@@ -403,8 +447,8 @@ function animate(now){
     time+=dt;shot=Math.max(0,shot-dt);invul=Math.max(0,invul-dt);updateMovement(dt);updateCompanion(dt);
     if(firing)throwItem();if(pendingThrow){pendingThrow.delay-=dt;if(pendingThrow.delay<=0){const pending=pendingThrow;pendingThrow=null;releaseItem(pending);}}
     spawn-=dt;if(spawn<=0&&!transition){spawn=spawnCat()?levels[level].rate:.35;}
-    updateCats(dt);if(mode==='play')updateShots(dt);
-    if(transition&&mode==='play'){transition-=dt;if(transition<=0){if(level===4)end(true);else{level++;startLevel();}}}
+    updateCats(dt);updateBoss(dt);if(mode==='play')updateShots(dt);
+    if(transition&&mode==='play'){transition-=dt;if(transition<=0){if(level===4){if(bossDefeated)end(true);}else{level++;startLevel();}}}
     tutorial(dt);if(time>noticeUntil)$('notice').textContent='';
   }else if(avatar&&mode==='end')avatar.update(dt,0);
   renderer.render(scene,camera);
