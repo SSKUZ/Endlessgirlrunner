@@ -198,9 +198,34 @@ function releaseItem(pending){
   world.add(o);o.lookAt(temp2.copy(o.position).add(dir));
   shots.push({o,v:velocity,companion:ai,kind,age:0,life:kind==='bomb'?20:3.5,startY:o.position.y,yaw:assist.yaw,seed:Math.random()*7,gravity,landed:false,fuse:BOMB_FUSE,distance:0,previous:o.position.clone()});
 }
+// Cartoon blast: broad area damage, visible knockback, and friendly fire.
+const COOP_BLAST_RADIUS=5.5;
 function detonate(bomb){
-  const o=effectPool.pop()||createExplosion();o.position.set(bomb.o.position.x,0,bomb.o.position.z);o.visible=true;o.userData.tick(0);world.add(o);effects.push({o,age:0});
-  for(const cat of catList)if(!cat.flee&&insideExplosion(bomb.o.position,cat.o.position,BOMB_RADIUS))flee(cat,true,'explosion');
+  const center=bomb.o.position;
+  const o=effectPool.pop()||createExplosion();
+  o.position.set(center.x,0,center.z);o.visible=true;o.scale.setScalar(COOP_BLAST_RADIUS/3);
+  o.userData.tick(0);world.add(o);effects.push({o,age:0});
+  for(const cat of catList){
+    if(cat.flee||!insideExplosion(center,cat.o.position,COOP_BLAST_RADIUS))continue;
+    const away=cat.o.position.clone().sub(center).setY(0);
+    if(away.lengthSq()<.001)away.set(Math.random()-.5,0,Math.random()-.5);
+    away.normalize();
+    cat.o.position.addScaledVector(away,Math.min(2.2,COOP_BLAST_RADIUS-cat.o.position.distanceTo(center)+.5));
+    flee(cat,true,'explosion');
+    cat.direction.copy(away);
+  }
+  // The player's own bomb is dangerous even during ordinary contact invulnerability.
+  const playerDistance=Math.hypot(player.position.x-center.x,player.position.z-center.z);
+  if(playerDistance<=COOP_BLAST_RADIUS){
+    const damage=playerDistance<2.1?5:playerDistance<3.8?3:2;
+    lives=Math.max(0,lives-damage);invul=INVULNERABILITY;avatar.hit();hud();
+    notice(damage>=5?'Бомба слишком близко!':`Взрыв! −${damage} жизни`,2);
+    const away=player.position.clone().sub(center).setY(0);
+    if(away.lengthSq()<.001)away.set(Math.sin(heading),0,Math.cos(heading));
+    away.normalize();
+    player.position.addScaledVector(away,Math.min(2.5,Math.max(.6,COOP_BLAST_RADIUS-playerDistance)*.5));
+    if(lives<=0){end(false);return;}
+  }
 }
 
 const stick=$('stick'),nub=$('nub'),fire=$('fire');
