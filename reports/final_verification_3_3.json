@@ -1,0 +1,26 @@
+{
+  "verified_commit": "7b598b95c077b5acf6a3018368ae67e396fcf838",
+  "fresh_fetch_restore": true,
+  "models": [
+    {
+      "file": "girl_avatar_v2.glb",
+      "bytes": 4778312,
+      "triangles": 213910,
+      "sha256": "20d63a7c714c851c5fe0b192242ae922a30251d5736bf93a4941a1a7fc05f389",
+      "opened_by_trimesh": true,
+      "hair_watertight": true
+    },
+    {
+      "file": "boy_avatar_v2.glb",
+      "bytes": 5130916,
+      "triangles": 237354,
+      "sha256": "f2ff659acb454bebb291b059130653c793364ad60f9fd634796dd5e51a88df43",
+      "opened_by_trimesh": true,
+      "hair_watertight": true
+    }
+  ],
+  "final_qa_images_verified": 12,
+  "v1_unchanged": true,
+  "only_character_paths_changed": true,
+  "visual_quality": "PARTIAL"
+}
