@@ -1,7 +1,8 @@
 import * as T from 'three';
 import {loadCharacter} from './avatar-rig.js';
 import {createItem,createCat,createExplosion,buildEnvironment,createPodium} from './props.js';
-import {LEVELS,PLAYER_SPEED,BOMB_RADIUS,BOMB_FUSE,INVULNERABILITY,Progress,cameraMovement,assistedYaw,segmentSphere,sausageVelocity,planeFlight,zoomDistance,insideExplosion} from './mechanics.mjs';
+import {LEVELS,PLAYER_SPEED,BOMB_RADIUS,BOMB_FUSE,INVULNERABILITY,Progress,cameraMovement,assistedYaw,sausageVelocity,planeFlight,zoomDistance,insideExplosion} from './mechanics.mjs?v=body-hit-2';
+import {intersectProjectileCat} from './cat-hits.js?v=body-hit-2';
 
 // V2 keeps the original Three.js scene/group loop, five-level progression,
 // five lives, original characters and menu. Complete adds bounded forward assist.
@@ -158,6 +159,7 @@ function flee(cat,award=true,kind='body',point=null){
   if(award){
     const result=progress.defeat(cat.id,kind==='head');
     if(result.counted&&kind==='head'){reward('HEADSHOT! +2',false,point);tutorialAction(5);}
+    else if(result.counted&&kind==='body'&&point)reward('+1',false,point);
     if(result.bonusBomb)reward('+1 БОМБОЧКА!',true);
     hud();if(progress.complete&&!transition){transition=1.25;notice(level===4?'Все коты разбежались!':'Отлично! Идём дальше…',1.2);}
   }
@@ -261,7 +263,7 @@ function updateCats(dt){
 }
 function updateShots(dt){
   for(let i=shots.length-1;i>=0;i--){
-    const s=shots[i];s.previous.copy(s.o.position);s.age+=dt;s.life-=dt;
+    const s=shots[i];s.previous.copy(s.o.position);const previousRotation=s.o.quaternion.clone();s.age+=dt;s.life-=dt;
     if(s.kind==='bomb'){
       if(!s.landed){s.o.position.addScaledVector(s.v,dt);s.o.position.y-=.5*s.gravity*dt*dt;s.v.y-=s.gravity*dt;s.o.rotation.x+=dt*4;
         if(s.o.position.y<=.17){s.o.position.y=.17;s.landed=true;s.fuse=BOMB_FUSE;s.o.rotation.set(0,s.yaw,0);}}
@@ -278,11 +280,8 @@ function updateShots(dt){
     }
     let impact=null;
     for(const c of catList)if(!c.flee){
-      const head=c.o.userData.headCenter(new T.Vector3()),body=c.o.position.clone();body.y+=.37;
-      const radius=s.kind==='sausage'?.075:.095;
-      const ht=segmentSphere(s.previous,s.o.position,head,c.o.userData.headRadius+radius),bt=segmentSphere(s.previous,s.o.position,body,.33+radius);
-      const headHit=ht!==null&&(bt===null||ht<=bt+.025),fraction=headHit?ht:bt;
-      if(fraction!==null&&(!impact||fraction<impact.fraction))impact={cat:c,head:headHit,point:head,fraction};
+      const candidate=intersectProjectileCat(c.o,s.kind,s.previous,s.o.position,previousRotation,s.o.quaternion);
+      if(candidate&&(!impact||candidate.fraction<impact.fraction))impact={cat:c,...candidate};
     }
     if(impact)flee(impact.cat,true,impact.head?'head':'body',impact.point);
     if(impact||s.life<=0||s.o.position.y<.07){recycleShot(s);shots.splice(i,1);}

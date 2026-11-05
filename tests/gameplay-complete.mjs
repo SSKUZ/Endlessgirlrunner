@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {LEVELS,PLAYER_SPEED,BOMB_RADIUS,BOMB_FUSE,INVULNERABILITY,Progress,assistedYaw,cameraMovement,segmentSphere,sausageVelocity,planeFlight,zoomDistance,insideExplosion} from '../assets/gameplay-complete/mechanics.mjs';
+import {LEVELS,PLAYER_SPEED,BOMB_RADIUS,BOMB_FUSE,INVULNERABILITY,Progress,assistedYaw,cameraMovement,segmentSphere,segmentBox,sausageVelocity,planeFlight,zoomDistance,insideExplosion} from '../assets/gameplay-complete/mechanics.mjs';
 let count=0;
 function check(name,test){test();count++;console.log('OK',name);}
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} != ${b}`);
@@ -35,6 +35,12 @@ check('planes rise then glide down farther than sausages',()=>{
 check('swept collision catches fast shots and rejects misses',()=>{
   assert.notEqual(segmentSphere({x:0,y:1,z:0},{x:0,y:1,z:10},{x:0,y:1,z:5},.25),null);
   assert.equal(segmentSphere({x:0,y:1,z:0},{x:0,y:1,z:10},{x:1,y:1,z:5},.25),null);
+});
+check('swept boxes include limbs and reject empty surrounding space',()=>{
+  const boxMin={x:-.06,y:0,z:-.05},boxMax={x:.06,y:.2,z:.05};
+  assert.notEqual(segmentBox({x:-1,y:.1,z:0},{x:1,y:.1,z:0},boxMin,boxMax),null);
+  assert.equal(segmentBox({x:-1,y:.3,z:0},{x:1,y:.3,z:0},boxMin,boxMax),null);
+  assert.equal(segmentBox({x:0,y:.1,z:0},{x:0,y:.1,z:.01},boxMin,boxMax),0);
 });
 check('head and body volumes distinguish precise high hits',()=>{
   const a={x:0,y:.75,z:0},b={x:0,y:.75,z:2};assert.notEqual(segmentSphere(a,b,{x:0,y:.75,z:1},.23),null);
