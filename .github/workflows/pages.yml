@@ -18,6 +18,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/high-fidelity-girl-character
+          path: model-src
+      - name: Restore character GLBs
+        run: |
+          python model-src/assets/characters/restore_characters.py
+          mkdir -p assets/characters
+          cp model-src/assets/characters/girl_avatar.glb assets/characters/
+          cp model-src/assets/characters/boy_avatar.glb assets/characters/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
