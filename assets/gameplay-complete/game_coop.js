@@ -32,6 +32,7 @@ let heroIndex=0,itemIndex=0,step='hero',mode='select',environment=null,avatar=nu
 let level=0,score=0,totalScore=0,lives=5,spawn=.6,shot=0,invul=0,time=0,pendingThrow=null,transition=0;
 let catList=[],shots=[],catPool=[],shotPools={sausage:[],plane:[],bomb:[]},firing=false;
 let boss=null,bossDefeated=false;
+let gift=null,giftTimer=12,rapidFireUntil=0,shieldCharges=0;
 let levelStars=[],levelStartLives=5,levelStartTime=0,levelBombsUsed=0;
 let bombSelected=false,nextCatId=1,nextCatVariant=0,effects=[],effectPool=[],tutorialIndex=0,tutorialTimer=0;
 let heading=0,cameraYaw=0,cameraPitch=.27,cameraDistance=5,noticeUntil=0;
@@ -109,7 +110,7 @@ function tutorial(dt){
 }
 function recycleCat(cat){world.remove(cat.o);cat.o.visible=false;catPool.push(cat);}
 function recycleShot(s){world.remove(s.o);s.o.visible=false;shotPools[s.kind].push(s.o);}
-function clearActors(){if(boss){world.remove(boss.o);boss=null;}bossDefeated=false;catList.forEach(recycleCat);shots.forEach(recycleShot);effects.forEach(e=>{world.remove(e.o);effectPool.push(e.o);});catList=[];shots=[];effects=[];pendingThrow=null;}
+function clearActors(){if(gift){world.remove(gift.o);gift=null;}if(boss){world.remove(boss.o);boss=null;}bossDefeated=false;catList.forEach(recycleCat);shots.forEach(recycleShot);effects.forEach(e=>{world.remove(e.o);effectPool.push(e.o);});catList=[];shots=[];effects=[];pendingThrow=null;}
 function build(){
   clearActors();if(environment){world.remove(environment);environment.userData.dispose?.();}
   environment=buildEnvironment(level);world.add(environment);
@@ -119,6 +120,7 @@ function startLevel(){
   companionGroup.position.set(1.8,0,-4.4);companionGroup.rotation.y=0;companionHeading=0;companionShot=3.5;
   player.position.set(0,0,-3);heading=0;player.rotation.y=0;cameraYaw=0;cameraPitch=.27;
   cameraAnchor.copy(player.position);cameraPointers.clear();pinch=null;
+  giftTimer=10+Math.random()*7;rapidFireUntil=0;shieldCharges=0;
   progress.startLevel(level);levelStartLives=lives;levelStartTime=time;levelBombsUsed=0;spawn=levels[level].rate;invul=1;transition=0;shot=0;build();hud();notice(`Уровень ${level+1} · ${levels[level].name}`,2.5);
   camera.position.set(0,1+Math.sin(cameraPitch)*cameraDistance,-3-Math.cos(cameraPitch)*cameraDistance);camera.lookAt(0,1,-3);
 }
@@ -217,7 +219,8 @@ function throwItem(){
   const kind=bombSelected&&progress.bombs>0?'bomb':items[itemIndex].key;
   if(kind==='bomb'&&!progress.consumeBomb())return;
   if(kind==='bomb')levelBombsUsed++;
-  shot=kind==='bomb'?.75:kind==='sausage'?.43:.43;pendingThrow={delay:.17,kind};
+  if(kind!=='bomb'&&time<rapidFireUntil)shot=.12;
+  shot=kind==='bomb'?.75:(time<rapidFireUntil?.23:.43);pendingThrow={delay:.17,kind};
   avatar.throw(kind,moveAmount>.15);if(kind!=='bomb')tutorialAction(2);hud();
 }
 function releaseItem(pending){
@@ -348,6 +351,40 @@ function updateCompanion(dt){
     }
   }
 }
+function makeGift(){
+  const o=new T.Group();
+  const box=new T.Mesh(new T.BoxGeometry(.65,.65,.65),new T.MeshStandardMaterial({color:'#ed5d91',roughness:.55}));
+  box.position.y=.47;box.castShadow=true;o.add(box);
+  const ribbon=new T.MeshStandardMaterial({color:'#ffe56a',metalness:.12,roughness:.4});
+  const stripA=new T.Mesh(new T.BoxGeometry(.14,.67,.68),ribbon);
+  stripA.position.y=.47;o.add(stripA);
+  const stripB=new T.Mesh(new T.BoxGeometry(.68,.67,.14),ribbon);
+  stripB.position.y=.47;o.add(stripB);
+  const bow=new T.Mesh(new T.TorusGeometry(.15,.045,6,12),ribbon);
+  bow.position.y=.88;bow.rotation.x=Math.PI/2;o.add(bow);
+  return o;
+}
+function updateGifts(dt){
+  if(gift){
+    gift.age+=dt;gift.o.rotation.y+=dt*1.7;gift.o.position.y=Math.sin(gift.age*3)*.09;
+    if(gift.o.position.distanceTo(player.position)<1.4){
+      const choice=Math.floor(Math.random()*4);
+      if(choice===0){lives=Math.min(5,lives+1);notice('🎁 +1 жизнь!',2);}
+      else if(choice===1){progress.bombs+=3;notice('🎁 +3 бомбочки!',2);}
+      else if(choice===2){rapidFireUntil=time+12;notice('🎁 Быстрые броски: 12 секунд!',2);}
+      else{shieldCharges++;notice('🎁 Щит от одного удара!',2);}
+      hud();world.remove(gift.o);gift=null;giftTimer=14+Math.random()*8;
+    }else if(gift.age>16){world.remove(gift.o);gift=null;giftTimer=10;}
+    return;
+  }
+  if(transition||boss)return;
+  giftTimer-=dt;
+  if(giftTimer<=0){
+    const o=makeGift(),angle=Math.random()*Math.PI*2,distance=3+Math.random()*4;
+    o.position.set(clamp(player.position.x+Math.sin(angle)*distance,-8,8),0,clamp(player.position.z+Math.cos(angle)*distance,-27,27));
+    world.add(o);gift={o,age:0};notice('🎁 Подарок рядом! Подбери его!',2);
+  }
+}
 function updateBoss(dt){
   if(!boss)return;
   boss.hitCooldown=Math.max(0,boss.hitCooldown-dt);boss.phase+=dt;
@@ -355,7 +392,7 @@ function updateBoss(dt){
   const distance=direction.length();if(distance>.01)direction.multiplyScalar(1/distance);
   const speed=1.55+(Math.sin(boss.phase*1.4)>.75?.8:0);
   if(distance>1.55)boss.o.position.addScaledVector(direction,speed*dt);
-  if(distance<1.6&&invul<=0){lives=Math.max(0,lives-1);invul=INVULNERABILITY;avatar.hit();hud();notice('Котокороль атакует! −1 жизнь',1.5);if(!lives){end(false);return;}}
+  if(distance<1.6&&invul<=0){if(shieldCharges>0){shieldCharges--;invul=INVULNERABILITY;notice('🛡️ Щит защитил!',1.5);return;}lives=Math.max(0,lives-1);invul=INVULNERABILITY;avatar.hit();hud();notice('Котокороль атакует! −1 жизнь',1.5);if(!lives){end(false);return;}}
   boss.o.rotation.y=dampAngle(boss.o.rotation.y,Math.atan2(direction.x,direction.z),6,dt);
   boss.o.userData.animate(dt,speed,time,false);
   boss.crown.rotation.z=T.MathUtils.damp(boss.crown.rotation.z,0,3,dt);
@@ -399,7 +436,7 @@ function updateCats(dt){
           break;
         }
       }
-      if(distance<.71&&invul<=0){lives--;invul=INVULNERABILITY;avatar.hit();hud();flee(c,false);dir=c.direction;speed=Math.max(3,c.speed*1.9);if(lives<=0){end(false);return;}}
+      if(distance<.71&&invul<=0){if(shieldCharges>0){shieldCharges--;invul=INVULNERABILITY;notice('🛡️ Щит защитил!',1.5);flee(c,false);continue;}lives--;invul=INVULNERABILITY;avatar.hit();hud();flee(c,false);dir=c.direction;speed=Math.max(3,c.speed*1.9);if(lives<=0){end(false);return;}}
       else if(distance<.72&&invul>0)speed=0;
     }
     c.o.position.addScaledVector(dir,dt*speed);
@@ -457,7 +494,7 @@ function animate(now){
   requestAnimationFrame(animate);const dt=Math.min(.04,(now-last)/1000);last=now;
   if(mode==='select')updateSelection(dt);
   else if(mode==='play'){
-    time+=dt;shot=Math.max(0,shot-dt);invul=Math.max(0,invul-dt);updateMovement(dt);updateCompanion(dt);
+    time+=dt;shot=Math.max(0,shot-dt);invul=Math.max(0,invul-dt);updateMovement(dt);updateCompanion(dt);updateGifts(dt);
     if(firing)throwItem();if(pendingThrow){pendingThrow.delay-=dt;if(pendingThrow.delay<=0){const pending=pendingThrow;pendingThrow=null;releaseItem(pending);}}
     spawn-=dt;if(spawn<=0&&!transition){spawn=spawnCat()?levels[level].rate:.35;}
     updateCats(dt);updateBoss(dt);if(mode==='play')updateShots(dt);
