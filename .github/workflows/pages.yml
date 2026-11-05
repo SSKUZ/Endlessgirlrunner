@@ -24,14 +24,20 @@ jobs:
         with:
           ref: b3ac37b351ff33c34c3eb35a18b13e32f7052b1d
           path: model-src
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/gameplay-animation-v2
+          path: work-original
       - name: Restore the original V2 characters
         run: |
           python model-src/assets/characters/restore_v2.py
           mkdir -p site/assets/characters site/assets/gameplay-v2
           cp model-src/assets/characters/girl_avatar_v2.glb site/assets/characters/
           cp model-src/assets/characters/boy_avatar_v2.glb site/assets/characters/
-      - name: Keep all game versions from main
+      - name: Restore Work's full animated game without overwriting other versions
         run: |
+          cp work-original/game_v2.html site/game_work_original.html
+          cp -R work-original/assets/gameplay-v2/. site/assets/gameplay-v2/
           touch site/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
