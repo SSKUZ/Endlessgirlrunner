@@ -12,25 +12,37 @@ concurrency:
   cancel-in-progress: true
 jobs:
   deploy:
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: site
       - uses: actions/checkout@v4
         with:
-          ref: feature/cartoon-character-redesign
+          ref: b3ac37b351ff33c34c3eb35a18b13e32f7052b1d
           path: model-src
-      - name: Restore character GLBs
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/gameplay-animation-v2
+          path: gameplay-src
+      - name: Restore the original V2 characters
         run: |
           python model-src/assets/characters/restore_v2.py
-          mkdir -p assets/characters
-          cp model-src/assets/characters/girl_avatar_v2.glb assets/characters/
-          cp model-src/assets/characters/boy_avatar_v2.glb assets/characters/
+          mkdir -p site/assets/characters site/assets/gameplay-v2
+          cp model-src/assets/characters/girl_avatar_v2.glb site/assets/characters/
+          cp model-src/assets/characters/boy_avatar_v2.glb site/assets/characters/
+      - name: Add V2 alongside the unchanged original game
+        run: |
+          cp gameplay-src/game_v2.html site/game_v2.html
+          cp gameplay-src/game_v1_backup.html site/game_v1_backup.html
+          cp -R gameplay-src/assets/gameplay-v2/. site/assets/gameplay-v2/
+          touch site/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: site
       - id: deployment
         uses: actions/deploy-pages@v4
