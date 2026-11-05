@@ -150,13 +150,19 @@ $('pause').onclick=pause;$('resume').onclick=resume;$('to-menu').onclick=returnT
 
 function spawnCat(){
   if(catList.length>=levels[level].cap)return false;
-  let cat=catPool.pop();if(!cat){const variant=nextCatVariant++%6;cat={o:createCat(variant),variant};}
+  // Early levels teach the basics; new behaviours appear gradually.
+  const allowed=level===0?[1]:level===1?[1,0,4]:level===2?[1,0,4,3]:level===3?[1,0,4,3,5]:[0,1,2,3,4,5];
+  const variant=allowed[nextCatVariant++%allowed.length];
+  let cat=catPool.find(c=>c.variant===variant);
+  if(cat)catPool.splice(catPool.indexOf(cat),1);
+  else cat={o:createCat(variant),variant};
   cat.id=nextCatId++;cat.o.visible=true;
   // The first two levels approach through one stable sector, not a ring.
   const angle=level<2?(Math.random()-.5)*(level===0?1.2:2.1):Math.random()*Math.PI*2;
   const dist=12+Math.random()*4;
   cat.o.position.set(player.position.x+Math.sin(angle)*dist,0,player.position.z+Math.cos(angle)*dist);
   cat.speed=levels[level].speed;cat.phase=Math.random()*10;cat.flee=false;cat.life=0;cat.direction=new T.Vector3();
+  cat.behaviourClock=Math.random()*2;cat.dodgeCooldown=1.5+Math.random()*2;cat.flankSign=Math.random()<.5?-1:1;
   world.add(cat.o);catList.push(cat);return true;
 }
 function flee(cat,award=true,kind='body',point=null,fromCompanion=false){
@@ -165,6 +171,7 @@ function flee(cat,award=true,kind='body',point=null,fromCompanion=false){
   if(cat.direction.lengthSq()<.01)cat.direction.set(Math.sin(heading+1),0,Math.cos(heading+1));cat.direction.normalize();
   if(award){
     const result=progress.defeat(cat.id,!fromCompanion&&kind==='head');
+    if(result.counted&&cat.variant===2){progress.points+=3;reward('ЗОЛОТОЙ КОТ! +3 ★',true);}
     if(result.counted&&kind==='head'&&!fromCompanion){reward('HEADSHOT! +2',false,point);tutorialAction(5);}
     else if(result.counted&&kind==='body'&&point)reward('+1',false,point);
     if(result.bonusBomb)reward('+1 БОМБОЧКА!',true);
@@ -308,13 +315,47 @@ function updateCompanion(dt){
 function updateCats(dt){
   for(let i=catList.length-1;i>=0;i--){
     const c=catList[i];let dir,speed=c.speed;
-    if(c.flee){dir=c.direction;speed=Math.max(3,speed*1.9);c.life-=dt;if(c.life<=0){recycleCat(c);catList.splice(i,1);continue;}}
-    else{
-      dir=temp.subVectors(player.position,c.o.position).setY(0);const distance=dir.length();if(distance>.001)dir.multiplyScalar(1/distance);
+    if(c.flee){
+      dir=c.direction;speed=Math.max(3,speed*1.9);c.life-=dt;
+      if(c.life<=0){recycleCat(c);catList.splice(i,1);continue;}
+    }else{
+      c.behaviourClock+=dt;
+      dir=temp.subVectors(player.position,c.o.position).setY(0);
+      const distance=dir.length();if(distance>.001)dir.multiplyScalar(1/distance);
+      switch(c.variant){
+        case 0: // Black: sprints, then pauses briefly.
+          speed*=1.45;
+          if(c.behaviourClock%4.2<.55)speed=0;
+          break;
+        case 2: // Golden: rare, faster, worth extra stars.
+          speed*=1.18;
+          break;
+        case 3: { // Grey: approaches from the side.
+          const sideways=new T.Vector3(dir.z,0,-dir.x).multiplyScalar(c.flankSign*.65);
+          dir.add(sideways).normalize();break;
+        }
+        case 4: // White: timid, runs away when approached.
+          if(distance<5.5){dir.multiplyScalar(-1);speed*=1.35;}
+          else speed*=.7;
+          break;
+        case 5: { // Spotted: occasional sideways dodges near flying projectiles.
+          c.dodgeCooldown-=dt;
+          if(c.dodgeCooldown<=0&&distance<8&&shots.some(p=>p.kind!=='bomb'&&p.o.position.distanceTo(c.o.position)<3.2)){
+            c.dodgeCooldown=2.5+Math.random()*1.5;
+            c.flankSign*=-1;c.behaviourClock=0;
+          }
+          if(c.behaviourClock<.35&&c.dodgeCooldown>1.5){
+            dir.add(new T.Vector3(dir.z,0,-dir.x).multiplyScalar(c.flankSign*2.2)).normalize();
+            speed*=1.35;
+          }
+          break;
+        }
+      }
       if(distance<.71&&invul<=0){lives--;invul=INVULNERABILITY;avatar.hit();hud();flee(c,false);dir=c.direction;speed=Math.max(3,c.speed*1.9);if(lives<=0){end(false);return;}}
       else if(distance<.72&&invul>0)speed=0;
     }
-    c.o.position.addScaledVector(dir,dt*speed);c.o.rotation.y=dampAngle(c.o.rotation.y,Math.atan2(dir.x,dir.z),10,dt);
+    c.o.position.addScaledVector(dir,dt*speed);
+    if(dir.lengthSq()>.001)c.o.rotation.y=dampAngle(c.o.rotation.y,Math.atan2(dir.x,dir.z),10,dt);
     c.o.userData.animate(dt,speed,time+c.phase,c.flee);
   }
 }
