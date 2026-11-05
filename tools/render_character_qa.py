@@ -41,16 +41,23 @@ VIEWS={
  'hair':([-.46,1.355,-.64],[0,1.225,-.015],28),
 }
 
+def studio_environment():
+    # A smooth photographic light dome: no visible rectangles or black sky.
+    u,v=np.meshgrid(np.linspace(0,1,256,endpoint=False),np.linspace(0,1,128))
+    data=np.broadcast_to(np.array([.20,.22,.25]),(128,256,3)).copy()
+    for cx,cy,wx,wy,power in [(.72,.22,.065,.080,[11,9.8,8.5]),(.25,.28,.080,.11,[3.5,4.5,6]),(.45,.19,.055,.075,[7,8,9])]:
+        du=np.minimum(np.abs(u-cx),1-np.abs(u-cx))
+        weight=np.exp(-(du/wx)**4-((v-cy)/wy)**4)
+        data+=weight[:,:,None]*np.array(power)*.50
+    return mi.Bitmap(data.astype(np.float32))
+
 def render(name,views,spp=None,size=None):
     s=tm.load(ROOT/'assets/characters'/f'{name}_avatar_v2.glb',force='scene')
-    spec={'type':'scene','integrator':{'type':'path','max_depth':7,'rr_depth':4,'hide_emitters':True},
-          'environment':{'type':'constant','radiance':{'type':'rgb','value':[.18,.20,.24]}},
+    spec={'type':'scene','integrator':{'type':'path','max_depth':7,'rr_depth':4,'hide_emitters':False},
+          'environment':{'type':'envmap','bitmap':studio_environment()},
           'floor':{'type':'rectangle','to_world':mi.ScalarTransform4f.translate([0,-.003,0])@mi.ScalarTransform4f.rotate([1,0,0],-90)@mi.ScalarTransform4f.scale(200),
                    'bsdf':{'type':'diffuse','reflectance':{'type':'rgb','value':[.65,.68,.72]}}}}
     for k,g in s.geometry.items():spec[('mesh_'+k).replace('.','_')]=geometry(g,k)
-    for key,pos,col,size in [('key',[-2.0,3.5,4.0],[20,18,16],1.8),('fill',[3.5,2.0,3.0],[6,7.5,9],1.8),('rim',[.5,3.5,-3.0],[12,13,15],1.6)]:
-        spec[key]={'type':'rectangle','to_world':mi.ScalarTransform4f.look_at(origin=pos,target=[0,.85,0],up=[0,1,0])@mi.ScalarTransform4f.scale(size*.5),
-                   'emitter':{'type':'area','radiance':{'type':'rgb','value':col}}}
     for i,v in enumerate(views):
         origin,target,fov=VIEWS[v];close=v in ['face','hair']
         spec['sensor_'+str(i)]={'type':'perspective','fov':fov,'fov_axis':'x','to_world':mi.ScalarTransform4f.look_at(origin=origin,target=target,up=[0,1,0]),

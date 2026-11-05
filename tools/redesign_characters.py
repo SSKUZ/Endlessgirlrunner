@@ -365,21 +365,20 @@ def hair(c,face):
     def edge_angle(t):
         front=max(0,math.sin(t));back=max(0,-math.sin(t))
         if boy:
-            return 1.92-.78*front+.10*back-.14*abs(math.cos(t))**8+.012*math.sin(11*t)
+            w=float(np.clip(front/.48,0,1));w=w*w*(3-2*w)
+            side=1.91+.10*back-.16*abs(math.cos(t))**8
+            return side*(1-w)+(1.075+.014*math.sin(9*t)+.008*math.sin(17*t))*w
         return 2.05-.99*front+.24*back-.24*abs(math.cos(t))**8+.012*math.sin(5*t)
     def cap(p,t,inner=False):
-        y=1.211+.163*math.cos(p)
-        yy=float(np.clip(y,1.071,1.3519))
-        front=math.sin(t)>0
-        profile=float(face.df(yy) if front else face.db(yy))
-        # Blend the scalp profile into a softly rounded crown above the skull.
-        blend=float(np.clip((y-1.315)/.027,0,1));blend=blend*blend*(3-2*blend)
-        rx=(float(face.rx(yy))+.009*math.sin(p))*(1-blend)+.130*math.sin(p)*blend
-        rz=(profile+.010*math.sin(p))*(1-blend)+.122*math.sin(p)*blend
-        strand=.00030*math.sin(73*t+8*p+2*math.sin(3*t))*math.sin(p)**2
-        # The cap tapers at the nape instead of ending in a broad dark shelf.
+        y=1.211+(.157 if boy else .163)*math.cos(p)
+        # Smooth analytic crown; taper only below the equator. This avoids
+        # the ridges created by resampling a facial profile above the temples.
+        taper=1-.32*float(np.clip((p-1.52)/.88,0,1))**1.4
+        rx=(.123 if boy else .130)*math.sin(p)*taper
+        rz=((.114 if boy else .118)-.009*math.sin(t))*math.sin(p)*taper
+        strand=(.00035*math.sin(73*t+8*p+2*math.sin(3*t))
+                +(.0010 if boy else .00035)*math.sin(17*t+7*p)*math.sin(11*t-4*p))*math.sin(p)**2
         x=(rx+strand)*math.cos(t);z=(rz+strand)*math.sin(t)
-        if p==0:x=z=0
         if inner:
             x*=.974;z*=.974;y=1.211+(y-1.211)*.981
         return [x,y,z]
@@ -391,7 +390,7 @@ def hair(c,face):
             for i in range(nt):
                 t=2*PI*i/nt;p=j/nr*edge_angle(t)
                 v.append(cap(p,t,inner))
-                g=.025*math.sin(73*t+8*p)+.022*math.sin(137*t+5*p)+.025*math.sin(5*t-3*p)
+                g=.055*math.sin(73*t+8*p)+.028*math.sin(137*t+5*p)+.030*math.sin(5*t-3*p)
                 colors.append(np.clip(rgb(c.hair)*(1+g),0,1))
         for i in range(nt):f.append([start,start+1+i,start+1+(i+1)%nt])
         for j in range(nr-1):
@@ -417,7 +416,14 @@ def hair(c,face):
                     pts=[[x0,1.356-.009*u,.034],[-.032-.018*u,1.331-.011*u,.087],[-.080-.013*u,1.280-.014*u,.085],[-.111,1.226-.014*u,.039],[-.106,1.175-.006*u,.006]]
                 else:
                     pts=[[x0,1.356-.008*u,.032],[.068+.013*u,1.326-.014*u,.073],[.103+.007*u,1.282-.009*u,.058],[.117,1.233,.018],[.108,1.195,-.009]]
-                c.curve('Swept_hair_mass_'+str(side)+'_'+str(k),pts,[.010,.012,.010,.007,.0007],c.hair,depths=[.004,.005,.004,.003,.0006],n=14,steps=34,rough=.64)
+                projected=[]
+                for x,y,z in pts:
+                    p0=math.acos(float(np.clip((y-1.211)/.163,-1,1)))
+                    t0=math.atan2(z,x)
+                    q=np.asarray(cap(p0,t0));rad=q-np.array([0,1.211,0]);rad/=np.linalg.norm(rad)
+                    projected.append(q+rad*.001)
+                pts=projected
+                c.curve('Swept_hair_mass_'+str(side)+'_'+str(k),pts,[.012,.015,.011,.006,.0007],c.hair,depths=[.0025,.003,.0025,.002,.0004],n=14,steps=34,rough=.64)
                 # Three fine grooves per lock; they are subordinate to the solid mass.
                 pp=np.asarray(pts)
                 for j in (-1,1):
@@ -450,17 +456,23 @@ def hair(c,face):
         for s in (-1,1):
             c.curve('Face_framing_wisp_'+str(s),[[s*.105,1.279,.065],[s*.116,1.230,.036],[s*.121,1.186,.026],[s*.113,1.161,.033]], [.002,.002,.0014,.0002],c.hair,n=8,steps=30,rough=.5)
     else:
-        # Short, forward swept locks sit over a closed cap, not on a flat crown.
-        for k,x in enumerate(np.linspace(-.094,.094,15)):
-            edge=abs(x)/.1
-            pp=[[x*.55+.009,1.369-.016*edge,-.015],
-                [x*.8+.010,1.352-.013*edge,.043],
-                [x+.004,1.327-.012*edge,.090-.011*edge],
-                [x-.007,1.300+.006*math.sin(k*1.7),.106-.026*edge]]
-            c.curve('Short_swept_lock_'+str(k),pp,[.007,.010,.008,.0004],c.hair,depths=[.004,.006,.005,.0003],n=12,steps=24,rough=.66)
-            for j in (-1,1):
-                p=np.array(pp);p[:,0]+=j*.0028;p[:,2]+=.004
-                c.curve('Fine_short_strand_'+str(k)+'_'+str(j),p,[.0003,.00045,.00035,.00005],'hairBHi',n=5,steps=20,rough=.69)
+        # Short directional tufts lie on the closed scalp. Every root is
+        # embedded and the small fringe tips taper into the actual hairline.
+        for k,tend in enumerate(np.linspace(.42,PI-.42,13)):
+            points=[]
+            for u in np.linspace(0,1,7):
+                t=tend+.18*(1-u)
+                p=.76+(edge_angle(tend)+.020-.76)*u
+                q=np.asarray(cap(p,t));rad=q-np.array([0,1.211,0]);rad/=np.linalg.norm(rad)
+                q+=rad*(.0002+.0003*math.sin(PI*u))
+                points.append(q)
+            c.curve('Short_swept_lock_'+str(k),points,[.005,.008,.009,.009,.007,.004,.0003],
+                    c.hair,depths=[.0007,.0010,.0012,.0011,.0009,.0007,.0002],n=12,steps=32,rough=.65)
+            if k%2==0:
+                pp=np.asarray(points).copy()
+                pp+=np.array([0,.0002,.0008])
+                c.curve('Fine_short_strand_'+str(k),pp,[.00018,.00025,.0003,.0003,.00025,.00018,.00003],
+                        'hairBHi',n=5,steps=28,rough=.72)
 
 def soft_hand(side,center):
     # A single implicit skin surface connects palm, thumb and four articulated fingers.
