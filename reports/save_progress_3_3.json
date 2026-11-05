@@ -1,8 +1,8 @@
 {
   "recovery_checkpoint": "e26f1df5069592162d0efe690861eaa9114619f5",
-  "model_parts_uploaded": 10,
+  "model_parts_uploaded": 20,
   "model_parts_total": 41,
-  "files_uploaded": 10,
+  "files_uploaded": 20,
   "files_total": 69,
   "complete": false
 }
