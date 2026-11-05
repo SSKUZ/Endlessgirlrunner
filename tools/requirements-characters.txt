@@ -1,8 +1,8 @@
-numpy==2.4.3
-scipy==1.17.1
-trimesh==4.12.2
-networkx
-manifold3d
-scikit-image
-mitsuba
-Pillow
+numpy==2.3.5
+scipy==1.17.0
+trimesh==5.2.0
+networkx==3.7
+manifold3d==3.5.4
+scikit-image==0.26.0
+mitsuba==3.9.1
+Pillow==13.0.0
