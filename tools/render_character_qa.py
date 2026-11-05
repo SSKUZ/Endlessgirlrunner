@@ -68,6 +68,7 @@ def render(name,views,spp=None,size=None):
     for i,v in enumerate(views):
         img=mi.render(scene,sensor=i,seed=19,spp=spp or (256 if v in ['face','hair'] else 128))
         mi.util.write_bitmap(str(OUT/f'{name}_{v}.png'),img)
+        Image.open(OUT/f'{name}_{v}.png').convert('RGB').save(OUT/f'{name}_{v}.jpg',quality=94)
         print(name,v,'rendered',flush=True)
 
 def contact(name):

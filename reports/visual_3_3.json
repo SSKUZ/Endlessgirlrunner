@@ -1,0 +1,114 @@
+{
+  "rendered_from_glb": true,
+  "models": [
+    {
+      "file": "girl_avatar_v2.glb",
+      "bytes": 4778312,
+      "triangles": 213910,
+      "meshes": 119,
+      "sha256": "20d63a7c714c851c5fe0b192242ae922a30251d5736bf93a4941a1a7fc05f389",
+      "source_sha256": "445452cef4a9016cf4fb0ebb7bf738317deab61b92da2fd6336a81ac1ce787d2",
+      "bounds": [
+        [
+          -0.2559879720211029,
+          0.005078293848782778,
+          -0.1270340532064438
+        ],
+        [
+          0.2559879720211029,
+          1.3739999532699585,
+          0.1231774315237999
+        ]
+      ]
+    },
+    {
+      "file": "boy_avatar_v2.glb",
+      "bytes": 5130916,
+      "triangles": 237354,
+      "meshes": 94,
+      "sha256": "f2ff659acb454bebb291b059130653c793364ad60f9fd634796dd5e51a88df43",
+      "source_sha256": "92fd293f9d0ddedee6dee05b6526c9ebab97f4229039a6927354219945cca9b2",
+      "bounds": [
+        [
+          -0.2559879720211029,
+          0.011512535624206066,
+          -0.18400000035762787
+        ],
+        [
+          0.2559879720211029,
+          1.3680000305175781,
+          0.12748827040195465
+        ]
+      ]
+    }
+  ],
+  "views": [
+    {
+      "file": "assets/characters/qa_v2/girl_front.jpg",
+      "sha256": "b68560dc0d66a06aaaec31a10290b97aacae49e408027094d2ed81f706b1bf53",
+      "source_glb": "assets/characters/girl_avatar_v2.glb"
+    },
+    {
+      "file": "assets/characters/qa_v2/girl_back.jpg",
+      "sha256": "c7ed24fc642764b2292a41e208d3eddf0c9e8b75d51c359eb6418a2383d8e45d",
+      "source_glb": "assets/characters/girl_avatar_v2.glb"
+    },
+    {
+      "file": "assets/characters/qa_v2/girl_left.jpg",
+      "sha256": "07fa147d61514a22d34f9de47eb469546bc3b9ab40f3b3b21074b493292476b7",
+      "source_glb": "assets/characters/girl_avatar_v2.glb"
+    },
+    {
+      "file": "assets/characters/qa_v2/girl_right.jpg",
+      "sha256": "9c45c1cf144699a8d12ff4a84733d39e75a5333edf96ab7a070b1b55feca72c3",
+      "source_glb": "assets/characters/girl_avatar_v2.glb"
+    },
+    {
+      "file": "assets/characters/qa_v2/girl_face.jpg",
+      "sha256": "d55ec925136a58b61b3910c026ba6ec267b8092e2bb2d646844aab89c4733e9c",
+      "source_glb": "assets/characters/girl_avatar_v2.glb"
+    },
+    {
+      "file": "assets/characters/qa_v2/girl_hair.jpg",
+      "sha256": "c0a811c76d61a847144764f1ccdc54f321a9468f4de95979791e4e8942894bf3",
+      "source_glb": "assets/characters/girl_avatar_v2.glb"
+    },
+    {
+      "file": "assets/characters/qa_v2/boy_front.jpg",
+      "sha256": "afd6a9fcd8c08b1331a7503338f51bd2b3b361c329be90862145477a78247061",
+      "source_glb": "assets/characters/boy_avatar_v2.glb"
+    },
+    {
+      "file": "assets/characters/qa_v2/boy_back.jpg",
+      "sha256": "69b359db54da665981162765ab11f1c56c5c32b48c2c0e044e010d62e923cc05",
+      "source_glb": "assets/characters/boy_avatar_v2.glb"
+    },
+    {
+      "file": "assets/characters/qa_v2/boy_left.jpg",
+      "sha256": "8271c6018d22b14085f3f559cebf5983cbd438718b106da1e0f1d9ae0f5213f1",
+      "source_glb": "assets/characters/boy_avatar_v2.glb"
+    },
+    {
+      "file": "assets/characters/qa_v2/boy_right.jpg",
+      "sha256": "017fcb699ca97c76a457ff3f9336a4de749572feddf70bedf4e6e761c18a47bf",
+      "source_glb": "assets/characters/boy_avatar_v2.glb"
+    },
+    {
+      "file": "assets/characters/qa_v2/boy_face.jpg",
+      "sha256": "09546b8533e5fdbb609dd6e55f9c553d0c66ef324f503da529f5575fef241213",
+      "source_glb": "assets/characters/boy_avatar_v2.glb"
+    },
+    {
+      "file": "assets/characters/qa_v2/boy_hair.jpg",
+      "sha256": "5fa24979f7a8ea54d02d4a28584e679e3cab5e7a64024df15fdf7b356aa21087",
+      "source_glb": "assets/characters/boy_avatar_v2.glb"
+    }
+  ],
+  "technical_geometry": "PASS",
+  "likeness_and_premium_style": "PARTIAL",
+  "limitations": [
+    "Hair remains stylized as solid sculpted masses rather than fine groomed strands.",
+    "Individual portrait likeness is approximate, especially the nose, lips and cheek expression.",
+    "Fine artistic polish still trails the supplied animation reference."
+  ]
+}
