@@ -1,0 +1,51 @@
+{
+  "units": "metres",
+  "up": "+Y",
+  "forward": "+Z",
+  "pose": "static relaxed A pose",
+  "rigged": false,
+  "limitations": "Interpretive cartoon likeness from front photographs. Side and rear inferred. Separate meshes require skinning and joint topology preparation before deformation animation.",
+  "models": [
+    {
+      "file": "girl_avatar.glb",
+      "bytes": 795308,
+      "triangles": 41040,
+      "sha256": "445452cef4a9016cf4fb0ebb7bf738317deab61b92da2fd6336a81ac1ce787d2",
+      "bounds": [
+        [
+          -0.24400000274181366,
+          0.004000000189989805,
+          -0.10135755687952042
+        ],
+        [
+          0.24400000274181366,
+          1.2952731847763062,
+          0.13490138947963715
+        ]
+      ],
+      "git_blob_sha": "f47b6d931a424f6ce30267d65ec4b34fc37aa9b0",
+      "parts": 12
+    },
+    {
+      "file": "boy_avatar.glb",
+      "bytes": 894080,
+      "triangles": 44250,
+      "sha256": "92fd293f9d0ddedee6dee05b6526c9ebab97f4229039a6927354219945cca9b2",
+      "bounds": [
+        [
+          -0.24400000274181366,
+          0.006000000052154064,
+          -0.16200000047683716
+        ],
+        [
+          0.24400000274181366,
+          1.2972785234451294,
+          0.12817344069480896
+        ]
+      ],
+      "git_blob_sha": "2fa8b15c3a77c586a4e489cdf1ad1390c63cd8cf",
+      "parts": 13
+    }
+  ],
+  "storage": "gzip+base64 chunks; restore with python assets/characters/restore_characters.py"
+}
