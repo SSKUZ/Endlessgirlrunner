@@ -41,9 +41,9 @@ VIEWS={
  'hair':([-.46,1.355,-.64],[0,1.225,-.015],28),
 }
 
-def render(name,views):
+def render(name,views,spp=None,size=None):
     s=tm.load(ROOT/'assets/characters'/f'{name}_avatar_v2.glb',force='scene')
-    spec={'type':'scene','integrator':{'type':'path','max_depth':7,'rr_depth':4},
+    spec={'type':'scene','integrator':{'type':'path','max_depth':7,'rr_depth':4,'hide_emitters':True},
           'environment':{'type':'constant','radiance':{'type':'rgb','value':[.18,.20,.24]}},
           'floor':{'type':'rectangle','to_world':mi.ScalarTransform4f.translate([0,-.003,0])@mi.ScalarTransform4f.rotate([1,0,0],-90)@mi.ScalarTransform4f.scale(200),
                    'bsdf':{'type':'diffuse','reflectance':{'type':'rgb','value':[.65,.68,.72]}}}}
@@ -54,12 +54,12 @@ def render(name,views):
     for i,v in enumerate(views):
         origin,target,fov=VIEWS[v];close=v in ['face','hair']
         spec['sensor_'+str(i)]={'type':'perspective','fov':fov,'fov_axis':'x','to_world':mi.ScalarTransform4f.look_at(origin=origin,target=target,up=[0,1,0]),
-             'sampler':{'type':'independent','sample_count':384 if close else 192},
-             'film':{'type':'hdrfilm','width':640 if close else 480,'height':640 if close else 800,
+             'sampler':{'type':'independent','sample_count':spp or (256 if close else 128)},
+             'film':{'type':'hdrfilm','width':size or (640 if close else 480),'height':size or (640 if close else 800),
                      'rfilter':{'type':'tent'}}}
     scene=mi.load_dict(spec)
     for i,v in enumerate(views):
-        img=mi.render(scene,sensor=i,seed=19,spp=384 if v in ['face','hair'] else 192)
+        img=mi.render(scene,sensor=i,seed=19,spp=spp or (256 if v in ['face','hair'] else 128))
         mi.util.write_bitmap(str(OUT/f'{name}_{v}.png'),img)
         print(name,v,'rendered',flush=True)
 
@@ -76,5 +76,6 @@ def contact(name):
     sheet.save(OUT/f'{name}_contact.jpg',quality=92)
 
 if __name__=='__main__':
-    ap=argparse.ArgumentParser();ap.add_argument('--character',choices=['girl','boy']);ap.add_argument('--views',nargs='+',choices=list(VIEWS));a=ap.parse_args()
-    for name in ([a.character] if a.character else ['girl','boy']):render(name,a.views or list(VIEWS));contact(name)
+    ap=argparse.ArgumentParser();ap.add_argument('--character',choices=['girl','boy']);ap.add_argument('--views',nargs='+',choices=list(VIEWS))
+    ap.add_argument('--spp',type=int);ap.add_argument('--size',type=int);a=ap.parse_args()
+    for name in ([a.character] if a.character else ['girl','boy']):render(name,a.views or list(VIEWS),a.spp,a.size);contact(name)

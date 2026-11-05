@@ -20,9 +20,9 @@ PI=math.pi
 
 PALETTE={
  'skinG':'edbea1','skinB':'edc5ae','blush':'e9988c','lip':'bf7672',
- 'mouth':'85524b','nostril':'a36c5d','eyeWhite':'f5eee7','irisG':'69442b',
+ 'mouth':'95655e','nostril':'ad7b69','eyeWhite':'f5eee7','irisG':'69442b',
  'irisB':'645341','irisRim':'382b24','pupil':'151b1b','glint':'ffffff',
- 'hairG':'493024','hairHi':'67452d','hairB':'4a3b30','hairBHi':'6c5540',
+ 'hairG':'583a29','hairHi':'785236','hairB':'514032','hairBHi':'72583e',
  'browG':'63402d','browB':'6d5140','lash':'473025','yellow':'f0dc8d',
  'rib':'e7cf7a','print':'252c2b','pink':'e86a86','pinkBand':'ddb0b4',
  'blue':'1267cf','blueHi':'2379dd','navy':'202c43','hood':'202532',
@@ -125,27 +125,35 @@ class Character:
     def ell(self,name,c,r,color,rough=.65):return self.add(name,ellipsoid(c,r),color,rough)
 
 def head_profile(boy):
+    # Independent jaw, cheek, forehead and occipital profiles interpreted from
+    # the supplied photographs. These are deliberately not shared silhouettes.
     if boy:
-        rows=[(1.071,.0005,.025,.022),(1.082,.040,.059,.041),(1.105,.071,.077,.063),
-              (1.14,.094,.085,.085),(1.177,.111,.088,.102),(1.216,.115,.090,.108),
-              (1.26,.114,.092,.109),(1.30,.100,.084,.094),(1.332,.064,.057,.063),(1.352,.0005,.001,.001)]
+        rows=[(1.071,.0005,.026,.024),(1.078,.027,.044,.034),
+              (1.089,.054,.066,.047),(1.110,.081,.080,.066),
+              (1.142,.102,.085,.088),(1.180,.114,.088,.103),
+              (1.216,.115,.090,.108),(1.260,.111,.093,.109),
+              (1.300,.098,.085,.096),(1.332,.062,.056,.062),
+              (1.352,.0005,.001,.001)]
     else:
-        rows=[(1.071,.0005,.027,.022),(1.083,.035,.059,.040),(1.105,.065,.077,.061),
-              (1.14,.095,.087,.083),(1.177,.116,.089,.099),(1.216,.118,.090,.107),
-              (1.26,.112,.091,.107),(1.30,.098,.083,.093),(1.332,.061,.055,.060),(1.352,.0005,.001,.001)]
+        rows=[(1.071,.0005,.026,.023),(1.078,.023,.043,.033),
+              (1.091,.049,.065,.046),(1.114,.074,.081,.064),
+              (1.149,.102,.089,.086),(1.181,.116,.090,.100),
+              (1.216,.116,.091,.107),(1.260,.109,.092,.108),
+              (1.300,.095,.083,.094),(1.332,.060,.055,.061),
+              (1.352,.0005,.001,.001)]
     a=np.array(rows)
     return [PchipInterpolator(a[:,0],a[:,i]) for i in (1,2,3)]
 
 class Face:
     def __init__(self,c):
         self.c=c;self.boy=c.boy;self.rx,self.df,self.db=head_profile(c.boy)
-        self.eyeY=1.216 if c.boy else 1.214
-        self.eyeX=.048 if c.boy else .050
-        self.a=.030 if c.boy else .031
-        self.b=.0120 if c.boy else .0130
-        self.slant=.0007 if c.boy else .002
-        self.mouthY=1.134 if c.boy else 1.132
-        self.mouthW=.033 if c.boy else .034
+        self.eyeY=1.216 if c.boy else 1.217
+        self.eyeX=.047 if c.boy else .0485
+        self.a=.0285 if c.boy else .030
+        self.b=.0142 if c.boy else .0170
+        self.slant=.0007 if c.boy else .0021
+        self.mouthY=1.1335 if c.boy else 1.134
+        self.mouthW=.033 if c.boy else .0315
     def depth(self,x,y):
         x=np.asarray(x);y=np.asarray(y)
         q=np.clip(x/self.rx(y),-1,1)
@@ -153,10 +161,10 @@ class Face:
         def g(cx,cy,wx,wy):return np.exp(-((x-cx)/wx)**2-((y-cy)/wy)**2)
         # Continuous bridge, alae, philtrum, muzzle, cheek pads and chin.
         front=np.maximum(0,1-q*q)**2
-        d+=front*((.010 if self.boy else .015)*(g(.068,1.175,.039,.029)+g(-.068,1.175,.039,.029))
+        d+=front*((.009 if self.boy else .0135)*(g(.068,1.175,.039,.029)+g(-.068,1.175,.039,.029))
             -.0075*(g(self.eyeX,self.eyeY,.033,.022)+g(-self.eyeX,self.eyeY,.033,.022))
-            +.015*g(0,1.200,.014,.031)+(.029 if self.boy else .031)*g(0,1.166,.020,.013)
-            +.006*(g(.015,1.161,.010,.009)+g(-.015,1.161,.010,.009))
+            +(.018 if self.boy else .014)*g(0,1.202,.013,.029)+(.027 if self.boy else .028)*g(0,1.167,.018 if self.boy else .016,.013)
+            +.005*(g(.014,1.161,.009,.008)+g(-.014,1.161,.009,.008))
             +.005*g(0,1.140,.032,.020)+.006*g(0,1.105,.037,.020)
             -.002*g(0,1.148,.004,.009))
         for s in (-1,1):d-=.002*g(s*self.mouthW, self.mouthY+.004,.009,.009)
@@ -201,7 +209,8 @@ class Face:
         for s in (-1,1):keep &= ~self.in_eye(center[:,0],center[:,1],s,-.00005)
         tri=tri[keep]
         v=np.column_stack([pts,self.depth(pts[:,0],pts[:,1])])
-        c.add('Sculpted_face_with_eye_sockets',mesh(v,tri),c.skin,.61, self.skin_colors(mesh(v,tri).vertices))
+        front_mesh=mesh(v,tri)
+        if front_mesh.face_normals[:,2].mean()<0:front_mesh.invert()
         # Rear cranium meets both facial side boundaries exactly.
         v=[];f=[];n=64
         for y in yy:
@@ -210,40 +219,53 @@ class Face:
         for j in range(len(yy)-1):
             for i in range(n):
                 a=j*(n+1)+i;f.extend([[a,a+n+1,a+1],[a+1,a+n+1,a+n+2]])
-        c.add('Rear_cranium',mesh(v,f),c.skin,.61)
+        rear_mesh=mesh(v,f)
+        if rear_mesh.face_normals[:,2].mean()>0:rear_mesh.invert()
+        # Weld identical boundary samples so the head shares smooth normals
+        # around both temples, the jaw and the nape. Eye sockets stay open.
+        head=tm.util.concatenate([front_mesh,rear_mesh]);head.merge_vertices(digits_vertex=7)
+        head.fix_normals()
+        c.add('Sculpted_head_with_eye_sockets',head,c.skin,.61,self.skin_colors(head.vertices))
         self.ears();self.eyes();self.mouth()
         for s in (-1,1):
             pts=[]
             for t in np.linspace(0,PI,14):
                 x=s*.0105+.004*math.cos(t);y=1.156-.0016*math.sin(t)
                 pts.append([x,y,float(self.depth(x,y))+.0006])
-            c.curve('Subtle_nostril_'+str(s),pts,[.00065]*14,'nostril',n=6,steps=16)
+            c.curve('Subtle_nostril_'+str(s),pts,[.00038]*14,'nostril',n=6,steps=16)
     def ears(self):
         c=self.c
-        for s in (-1,1):
-            v=[];f=[];nr=12;nt=48
-            for j in range(nr+1):
-                r=j/nr
-                for i in range(nt):
-                    t=2*PI*i/nt
-                    x=s*(.113+.022*r*math.cos(t));y=1.194+.034*r*math.sin(t)
-                    z=.006+.008*r*r-.004*math.exp(-((r-.5)/.25)**2)
-                    v.append([x,y,z])
-            for j in range(nr):
-                for i in range(nt):
-                    a=j*nt+i;b=j*nt+(i+1)%nt;f.extend([[a,b,a+nt],[b,b+nt,a+nt]])
-            stride=len(v)
-            v.extend([[x,y,-.008] for x,y,z in list(v)])
-            f.extend([[a+stride,b+stride,cc+stride] for a,b,cc in [q[::-1] for q in list(f)]])
-            for i in range(nt):
-                a=nr*nt+i;b=nr*nt+(i+1)%nt
-                f.extend([[a,a+stride,b],[b,a+stride,b+stride]])
-            ear=mesh(v,f);cs=self.skin_colors(ear.vertices)*.94+rgb('blush')*.06
-            c.add('Ear_sculpture_'+str(s),ear,c.skin,.7,cs)
-            pp=[[s*(.113+.022*math.cos(t)),1.194+.034*math.sin(t),.013] for t in np.linspace(0,2*PI,49)]
-            c.curve('Ear_helix_'+str(s),pp,[.0032]*49,c.skin,n=10,steps=48)
-            pp=[[s*.113,1.177,.011],[s*.119,1.188,.012],[s*.116,1.207,.012],[s*.108,1.215,.009]]
-            c.curve('Ear_antihelix_'+str(s),pp,[.0025,.0028,.0025,.001],c.skin,n=8,steps=18)
+        for side in (-1,1):
+            # Closed softly cupped ear with a rolled rim and attached lobe.
+            # It leans back toward the skull instead of facing the camera flat.
+            nu,nv=64,32;v=[];f=[]
+            height=.029 if c.boy else .0265
+            for j in range(nv+1):
+                p=PI*j/nv
+                for i in range(nu):
+                    t=2*PI*i/nu
+                    x=.0145*math.sin(p)*math.cos(t)
+                    y=height*math.cos(p)
+                    z=.011*math.sin(p)*math.sin(t)
+                    if z>0:
+                        z-=.0055*math.exp(-(x/.009)**2-(y/.020)**2)*(z/.011)**2
+                        z+=.0017*math.exp(-((y+.020)/.009)**2)
+                    angle=side*.32
+                    xx=side*.118+x*math.cos(angle)+z*math.sin(angle)
+                    zz=-.001-x*math.sin(angle)+z*math.cos(angle)
+                    v.append([xx,1.194+y,zz])
+            for j in range(nv):
+                for i in range(nu):
+                    a=j*nu+i;b=j*nu+(i+1)%nu
+                    f.extend([[a,b,a+nu],[b,b+nu,a+nu]])
+            ear=mesh(v,f)
+            c.add('Ear_soft_cup_'+str(side),ear,c.skin,.68,self.skin_colors(ear.vertices)*.97+rgb('blush')*.03)
+            pp=[]
+            for t in np.linspace(-1.45,1.55,22):
+                x=side*(.120+.0075*math.cos(t));y=1.194+.019*math.sin(t)
+                pp.append([x,y,.0075])
+            c.curve('Ear_inner_fold_'+str(side),pp,[.0013]*len(pp),c.skin,n=8,steps=26,rough=.72)
+            c.ell('Ear_attached_lobe_'+str(side),(side*.118,1.175,.000),(.010,.009,.009),c.skin,.7)
     def eye_depth(self,x,y,s):
         q=(x-s*self.eyeX)/self.a;dy=(y-self.eyeY-s*self.slant*q)/self.b
         r2=q*q+dy*dy
@@ -273,7 +295,7 @@ class Face:
                     a=j*n+i;b=j*n+(i+1)%n;f.extend([[a,b,a+n],[b,b+n,a+n]])
             lid=mesh(v,f);c.add('Sculpted_eyelid_'+str(s),lid,c.skin,.6,self.skin_colors(lid.vertices))
             # Radial iris fibres and limbal ring, no painted-on white highlight.
-            radius=.0140 if not c.boy else .0133;v=[];f=[];colors=[]
+            radius=.0162 if not c.boy else .0139;v=[];f=[];colors=[]
             for j in range(15):
                 r=j/14
                 for i in range(96):
@@ -306,8 +328,8 @@ class Face:
             v=[];f=[];width=.032 if not c.boy else .030
             for i in range(40):
                 q=-1+2*i/39;x=s*self.eyeX+width*q
-                y=1.248+(.0035 if c.boy else .0045)*(1-q*q)-s*.002*q
-                h=.0031*max(.1,(1-q*q)**.5)
+                y=(1.248 if c.boy else 1.250)+(.0028 if c.boy else .006)*(1-q*q)-s*.0017*q
+                h=(.0029 if c.boy else .0021)*max(.05,(1-q*q)**.6)
                 for a in (-1,1):
                     yy=y+a*h;v.append([x,yy,float(self.depth(x,yy))+.0012])
             for i in range(39):a=2*i;f.extend([[a,a+1,a+2],[a+1,a+3,a+2]])
@@ -319,7 +341,7 @@ class Face:
             v=[];f=[];cs=[]
             for i in range(65):
                 q=-1+2*i/64;x=self.mouthW*q;y=line(q)
-                h=(.003 if top else -.0045)*(1-q*q)
+                h=((.0022 if c.boy else .0028) if top else (-.0040 if c.boy else -.0046))*(1-q*q)
                 if top:h*=1-.34*math.exp(-(q/.24)**2)
                 for j in range(7):
                     u=j/6;yy=y+u*h
@@ -336,50 +358,55 @@ class Face:
         c.curve('Closed_smile',points,[.0006]*35,'mouth',n=6,steps=35)
 
 def hair(c,face):
-    # A complete, closed, opaque hair shell; all decorative locks lie on top.
+    # Closed two-layer cap, positioned outside the head at its actual height.
+    # The old y-remapping folded the nape rim through the skull and made a
+    # black ribbon. A monotone surface and a rolled 3 mm rim remove that fold.
     boy=c.boy;nt=128;nr=52;v=[];f=[];colors=[]
+    def edge_angle(t):
+        front=max(0,math.sin(t));back=max(0,-math.sin(t))
+        if boy:
+            return 1.92-.78*front+.10*back-.14*abs(math.cos(t))**8+.012*math.sin(11*t)
+        return 2.05-.99*front+.24*back-.24*abs(math.cos(t))**8+.012*math.sin(5*t)
     def cap(p,t,inner=False):
-        y0=1.211+.141*math.cos(p)
-        y0=np.clip(y0,1.071,1.352)
-        front=max(0,math.sin(t))
-        edge=(1.82-.78*front+.007*math.sin(17*t)) if boy else (2.52-1.47*front+.17*front*math.cos(t)+.018*math.sin(5*t))
-        tuck=np.clip((p/edge-.84)/.16,0,1)**2*(1-front)
-        x=(float(face.rx(y0))+.010*math.sin(p)*(1-.90*tuck))*math.cos(t)
-        dep=float(face.df(y0) if math.sin(t)>0 else face.db(y0))
-        z=(dep+.010*math.sin(p)*(1-.90*tuck))*math.sin(t)
-        y=1.211+.154*math.cos(p)+.005
-        y=y*(1-tuck)+y0*tuck
-        # Low, broad directional ridges keep a natural continuous silhouette.
-        w=.00065*math.sin(53*t+9*p+2*math.sin(t*3))*math.sin(p)**2
-        x+=w*math.cos(t);z+=w*math.sin(t)
-        if inner:x*=.974;z*=.974;y-=.0028
+        y=1.211+.163*math.cos(p)
+        yy=float(np.clip(y,1.071,1.3519))
+        front=math.sin(t)>0
+        profile=float(face.df(yy) if front else face.db(yy))
+        # Blend the scalp profile into a softly rounded crown above the skull.
+        blend=float(np.clip((y-1.315)/.027,0,1));blend=blend*blend*(3-2*blend)
+        rx=(float(face.rx(yy))+.009*math.sin(p))*(1-blend)+.130*math.sin(p)*blend
+        rz=(profile+.010*math.sin(p))*(1-blend)+.122*math.sin(p)*blend
+        strand=.00030*math.sin(73*t+8*p+2*math.sin(3*t))*math.sin(p)**2
+        # The cap tapers at the nape instead of ending in a broad dark shelf.
+        x=(rx+strand)*math.cos(t);z=(rz+strand)*math.sin(t)
+        if p==0:x=z=0
+        if inner:
+            x*=.974;z*=.974;y=1.211+(y-1.211)*.981
         return [x,y,z]
-    for layer in (0,1):
-        for j in range(nr+1):
-            u=j/nr
+    layers=[]
+    for inner in (False,True):
+        start=len(v);layers.append(start)
+        v.append(cap(0,0,inner));colors.append(rgb(c.hair))
+        for j in range(1,nr+1):
             for i in range(nt):
-                t=2*PI*i/nt;front=max(0,math.sin(t))
-                if boy:edge=1.82-.78*front+.007*math.sin(17*t)
-                else:edge=2.52-1.47*front+.17*front*math.cos(t)+.018*math.sin(5*t)
-                p=u*edge;v.append(cap(p,t,bool(layer)))
-                g=.07*math.sin(53*t+9*p)+.05*math.sin(t*5-p*3)
+                t=2*PI*i/nt;p=j/nr*edge_angle(t)
+                v.append(cap(p,t,inner))
+                g=.025*math.sin(73*t+8*p)+.022*math.sin(137*t+5*p)+.025*math.sin(5*t-3*p)
                 colors.append(np.clip(rgb(c.hair)*(1+g),0,1))
-    stride=(nr+1)*nt
-    for layer in (0,1):
-        for j in range(nr):
+        for i in range(nt):f.append([start,start+1+i,start+1+(i+1)%nt])
+        for j in range(nr-1):
             for i in range(nt):
-                a=layer*stride+j*nt+i;b=layer*stride+j*nt+(i+1)%nt
-                tris=[[a,a+nt,b],[b,a+nt,b+nt]]
-                f.extend(tris if layer==0 else [q[::-1] for q in tris])
+                a=start+1+j*nt+i;b=start+1+j*nt+(i+1)%nt
+                f.extend([[a,a+nt,b],[b,a+nt,b+nt]])
+    outer,inside=layers
     for i in range(nt):
-        a=nr*nt+i;b=nr*nt+(i+1)%nt
-        f.extend([[a,b,a+stride],[b,b+stride,a+stride]])
-    for layer in (0,1):
-        ids=np.arange(layer*stride,layer*stride+nt)
-        v.append(np.mean(np.asarray(v)[ids],axis=0).tolist());colors.append(rgb(c.hair))
-        for i in range(nt):f.append([len(v)-1,int(ids[i]),int(ids[(i+1)%nt])])
+        a=outer+1+(nr-1)*nt+i;b=outer+1+(nr-1)*nt+(i+1)%nt
+        c0=inside+1+(nr-1)*nt+i;d=inside+1+(nr-1)*nt+(i+1)%nt
+        f.extend([[a,b,c0],[b,d,c0]])
     scalp=tm.Trimesh(vertices=v,faces=f,process=False);scalp.fix_normals()
-    c.add('Closed_opaque_hair_shell',scalp,c.hair,.46,colors)
+    if scalp.volume<0:scalp.invert()
+    assert scalp.is_watertight and scalp.is_winding_consistent
+    c.add('Closed_opaque_hair_shell',scalp,c.hair,.64,colors)
     if not boy:
         # Broad overlapping swept locks, offset part on the child's left.
         for side in (-1,1):
@@ -390,25 +417,35 @@ def hair(c,face):
                     pts=[[x0,1.356-.009*u,.034],[-.032-.018*u,1.331-.011*u,.087],[-.080-.013*u,1.280-.014*u,.085],[-.111,1.226-.014*u,.039],[-.106,1.175-.006*u,.006]]
                 else:
                     pts=[[x0,1.356-.008*u,.032],[.068+.013*u,1.326-.014*u,.073],[.103+.007*u,1.282-.009*u,.058],[.117,1.233,.018],[.108,1.195,-.009]]
-                c.curve('Swept_hair_mass_'+str(side)+'_'+str(k),pts,[.009,.012,.010,.008,.001],c.hair,depths=[.003,.005,.004,.004,.001],n=14,steps=34,rough=.46)
+                c.curve('Swept_hair_mass_'+str(side)+'_'+str(k),pts,[.010,.012,.010,.007,.0007],c.hair,depths=[.004,.005,.004,.003,.0006],n=14,steps=34,rough=.64)
                 # Three fine grooves per lock; they are subordinate to the solid mass.
                 pp=np.asarray(pts)
                 for j in (-1,1):
                     fine=pp.copy();fine[:,0]+=j*.003;fine[:,2]+=.004
-                    c.curve('Hair_strand_'+str(side)+'_'+str(k)+'_'+str(j),fine,[.0003,.0005,.00045,.00035,.0001],'hairHi' if k%3==0 else 'hairG',n=5,steps=28,rough=.52)
-        # A low gathering at the nape leads into the long side braid.
+                    c.curve('Hair_strand_'+str(side)+'_'+str(k)+'_'+str(j),fine,[.0003,.0005,.00045,.00035,.0001],'hairHi' if k%3==0 else 'hairG',n=5,steps=28,rough=.67)
+        # Gather the nape into the braid with three broad, tapered sections.
+        # Their ends are hidden inside the existing braid instead of floating
+        # at the side of the head or forming an abrupt separate sausage.
+        for k in range(5):
+            u=(k-2)/2
+            pp=[[.045+.018*u,1.242,-.101],[-.018+.014*u,1.198,-.104],
+                [-.075+.008*u,1.166,-.066],[-.108+.005*u,1.157,-.008],[-.113,1.151,.016]]
+            c.curve('Nape_gathered_hair_'+str(k),pp,[.012,.014,.014,.012,.008],
+                    c.hair,depths=[.003,.004,.005,.008,.008],n=14,steps=42,rough=.65)
         for k in range(3):
             pp=[];rr=[]
             for u in np.linspace(0,1,100):
-                theta=u*PI*11+k*2*PI/3;r=.0145*(1-.45*u)
-                pp.append([-.113-.024*u+r*math.cos(theta),1.155-.327*u,.014+.081*u+r*math.sin(theta)])
-                rr.append(.012*(1-.35*u))
-            c.curve('Continuous_braided_lock_'+str(k),pp,rr,c.hair,n=12,steps=100,rough=.45)
+                theta=u*PI*11+k*2*PI/3
+                fade=.15+.85*min(1,u/.12)
+                r=.0135*(1-.45*u)*fade
+                pp.append([-.113-.024*u+r*math.cos(theta),1.156-.328*u,.015+.080*u+r*math.sin(theta)])
+                rr.append(.0115*(1-.35*u))
+            c.curve('Continuous_braided_lock_'+str(k),pp,rr,c.hair,n=12,steps=100,rough=.64)
         c.curve('Pink_elastic',[[-.137,.838,.094],[-.137,.825,.097]],[.018,.017],'pink',n=28,steps=6,rough=.8)
         for k in range(9):
             u=(k-4)/4
             pp=[[-.137+.009*u,.827,.096],[-.143+.013*u,.793,.099],[-.145+.013*u,.758,.101],[-.145+.010*u,.734+.009*abs(u),.097]]
-            c.curve('Loose_braid_tail_'+str(k),pp,[.004,.005,.004,.0004],c.hair,depths=[.003,.004,.003,.0003],n=8,steps=22,rough=.46)
+            c.curve('Loose_braid_tail_'+str(k),pp,[.004,.005,.004,.0004],c.hair,depths=[.003,.004,.003,.0003],n=8,steps=22,rough=.65)
         # Short tapered wisps beside the ears.
         for s in (-1,1):
             c.curve('Face_framing_wisp_'+str(s),[[s*.105,1.279,.065],[s*.116,1.230,.036],[s*.121,1.186,.026],[s*.113,1.161,.033]], [.002,.002,.0014,.0002],c.hair,n=8,steps=30,rough=.5)
@@ -416,14 +453,14 @@ def hair(c,face):
         # Short, forward swept locks sit over a closed cap, not on a flat crown.
         for k,x in enumerate(np.linspace(-.094,.094,15)):
             edge=abs(x)/.1
-            pp=[[x*.55+.009,1.357-.011*edge,-.015],
-                [x*.8+.010,1.346-.011*edge,.037],
-                [x+.004,1.318-.012*edge,.076],
-                [x-.005,1.287-.008*math.sin(k*1.7),.088-.020*edge]]
-            c.curve('Short_swept_lock_'+str(k),pp,[.007,.010,.008,.0004],c.hair,depths=[.004,.006,.005,.0003],n=12,steps=24,rough=.5)
+            pp=[[x*.55+.009,1.369-.016*edge,-.015],
+                [x*.8+.010,1.352-.013*edge,.043],
+                [x+.004,1.327-.012*edge,.090-.011*edge],
+                [x-.007,1.300+.006*math.sin(k*1.7),.106-.026*edge]]
+            c.curve('Short_swept_lock_'+str(k),pp,[.007,.010,.008,.0004],c.hair,depths=[.004,.006,.005,.0003],n=12,steps=24,rough=.66)
             for j in (-1,1):
                 p=np.array(pp);p[:,0]+=j*.0028;p[:,2]+=.004
-                c.curve('Fine_short_strand_'+str(k)+'_'+str(j),p,[.0003,.00045,.00035,.00005],'hairBHi',n=5,steps=20,rough=.55)
+                c.curve('Fine_short_strand_'+str(k)+'_'+str(j),p,[.0003,.00045,.00035,.00005],'hairBHi',n=5,steps=20,rough=.69)
 
 def soft_hand(side,center):
     # A single implicit skin surface connects palm, thumb and four articulated fingers.
