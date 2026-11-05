@@ -128,15 +128,15 @@ def head_profile(boy):
     # Independent jaw, cheek, forehead and occipital profiles interpreted from
     # the supplied photographs. These are deliberately not shared silhouettes.
     if boy:
-        rows=[(1.071,.0005,.026,.024),(1.078,.027,.044,.034),
-              (1.089,.054,.066,.047),(1.110,.081,.080,.066),
+        rows=[(1.071,.0005,.037,.024),(1.078,.038,.059,.034),
+              (1.089,.059,.074,.047),(1.110,.081,.080,.066),
               (1.142,.102,.085,.088),(1.180,.114,.088,.103),
               (1.216,.115,.090,.108),(1.260,.111,.093,.109),
               (1.300,.098,.085,.096),(1.332,.062,.056,.062),
               (1.352,.0005,.001,.001)]
     else:
-        rows=[(1.071,.0005,.026,.023),(1.078,.023,.043,.033),
-              (1.091,.049,.065,.046),(1.114,.074,.081,.064),
+        rows=[(1.071,.0005,.034,.023),(1.078,.030,.054,.033),
+              (1.091,.052,.073,.046),(1.114,.074,.081,.064),
               (1.149,.102,.089,.086),(1.181,.116,.090,.100),
               (1.216,.116,.091,.107),(1.260,.109,.092,.108),
               (1.300,.095,.083,.094),(1.332,.060,.055,.061),
@@ -287,8 +287,8 @@ class Face:
             v=[];f=[]
             for j in range(7):
                 u=j/6;t=np.linspace(0,2*PI,n,endpoint=False)
-                x,y=self.eye_outline(s,t,self.a+.0045*u,self.b+.0045*u)
-                d=self.depth(x,y)+.0012+.0012*math.sin(PI*u)
+                x,y=self.eye_outline(s,t,self.a+.0034*u,self.b+.0034*u)
+                d=self.depth(x,y)+.00015+.0008*(1-u)+.00065*math.sin(PI*u)
                 v.extend(zip(x,y,d))
             for j in range(6):
                 for i in range(n):
@@ -423,28 +423,22 @@ def hair(c,face):
                     q=np.asarray(cap(p0,t0));rad=q-np.array([0,1.211,0]);rad/=np.linalg.norm(rad)
                     projected.append(q+rad*.001)
                 pts=projected
-                c.curve('Swept_hair_mass_'+str(side)+'_'+str(k),pts,[.012,.015,.011,.006,.0007],c.hair,depths=[.0025,.003,.0025,.002,.0004],n=14,steps=34,rough=.64)
+                c.curve('Swept_hair_mass_'+str(side)+'_'+str(k),pts,[.0006,.014,.011,.006,.0005],c.hair,depths=[.0003,.003,.0025,.002,.0003],n=14,steps=34,rough=.64)
                 # Three fine grooves per lock; they are subordinate to the solid mass.
                 pp=np.asarray(pts)
                 for j in (-1,1):
                     fine=pp.copy();fine[:,0]+=j*.003;fine[:,2]+=.004
                     c.curve('Hair_strand_'+str(side)+'_'+str(k)+'_'+str(j),fine,[.0003,.0005,.00045,.00035,.0001],'hairHi' if k%3==0 else 'hairG',n=5,steps=28,rough=.67)
-        # Gather the nape into the braid with three broad, tapered sections.
-        # Their ends are hidden inside the existing braid instead of floating
-        # at the side of the head or forming an abrupt separate sausage.
-        for k in range(5):
-            u=(k-2)/2
-            pp=[[.045+.018*u,1.242,-.101],[-.018+.014*u,1.198,-.104],
-                [-.075+.008*u,1.166,-.066],[-.108+.005*u,1.157,-.008],[-.113,1.151,.016]]
-            c.curve('Nape_gathered_hair_'+str(k),pp,[.012,.014,.014,.012,.008],
-                    c.hair,depths=[.003,.004,.005,.008,.008],n=14,steps=42,rough=.65)
+        # The braid roots are embedded inside the side cap, just below the
+        # ear, with a small hidden gathering volume rather than a flat bridge.
+        c.ell('Embedded_braid_gathering',(-.115,1.169,.005),(.017,.021,.016),c.hair,.65)
         for k in range(3):
             pp=[];rr=[]
             for u in np.linspace(0,1,100):
-                theta=u*PI*11+k*2*PI/3
+                theta=u*PI*12+k*2*PI/3
                 fade=.15+.85*min(1,u/.12)
                 r=.0135*(1-.45*u)*fade
-                pp.append([-.113-.024*u+r*math.cos(theta),1.156-.328*u,.015+.080*u+r*math.sin(theta)])
+                pp.append([-.113-.024*u+r*math.cos(theta),1.169-.341*u,.015+.080*u+.65*r*math.sin(2*theta)])
                 rr.append(.0115*(1-.35*u))
             c.curve('Continuous_braided_lock_'+str(k),pp,rr,c.hair,n=12,steps=100,rough=.64)
         c.curve('Pink_elastic',[[-.137,.838,.094],[-.137,.825,.097]],[.018,.017],'pink',n=28,steps=6,rough=.8)

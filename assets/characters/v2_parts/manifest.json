@@ -1,0 +1,300 @@
+{
+  "encoding": "concatenated-gzip",
+  "chunk_bytes": 131072,
+  "models": [
+    {
+      "file": "girl_avatar_v2.glb",
+      "bytes": 4778312,
+      "triangles": 213910,
+      "meshes": 119,
+      "sha256": "20d63a7c714c851c5fe0b192242ae922a30251d5736bf93a4941a1a7fc05f389",
+      "source_sha256": "445452cef4a9016cf4fb0ebb7bf738317deab61b92da2fd6336a81ac1ce787d2",
+      "bounds": [
+        [
+          -0.2559879720211029,
+          0.005078293848782778,
+          -0.1270340532064438
+        ],
+        [
+          0.2559879720211029,
+          1.3739999532699585,
+          0.1231774315237999
+        ]
+      ],
+      "compressed_bytes": 2583453,
+      "compressed_sha256": "683027bd9dc89c66afbab345e088cc98729ae68aa4abb604298dbea0e7e0f2ec",
+      "parts": [
+        {
+          "path": "parts/girl_avatar_v2.part001.bin",
+          "bytes": 131072,
+          "sha256": "3d5570cf9bf11821c3190abf077a726472eae2500ea017cbca8d6e77dad09e80",
+          "git_sha": "c6581c209e14eee724c9645ceeb01bfea4c350e4"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part002.bin",
+          "bytes": 131072,
+          "sha256": "f9d68ed0f81b0644bc90e5eac4fcbaa88ae30865bae7251a90515108a2dabdb4",
+          "git_sha": "b61b74959165364e4a0ab059b281c98f57b5249c"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part003.bin",
+          "bytes": 131072,
+          "sha256": "9eccadc4d63bd601dbe680861063ed371bda39d5a9d877adda08a3b14126d70e",
+          "git_sha": "370a00363af7ba53d9de0c211455448fea868cf6"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part004.bin",
+          "bytes": 131072,
+          "sha256": "2c57c1451b5394e3c91b1ea3cccd6b23989cc8dc8eb4fc0f476e1ff163baf9b3",
+          "git_sha": "ca1454af80d95e69789a500b8163d3190d3c415b"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part005.bin",
+          "bytes": 131072,
+          "sha256": "2331d52b4040cca126ffe68b7f79702fe10be7115227b50b2837a97ffceacdd7",
+          "git_sha": "9bce6bd48cc35fe3f5ba55964f74f3e014dba0b8"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part006.bin",
+          "bytes": 131072,
+          "sha256": "288bf8c76d1e0d505d13cdc175a738e1aba617354898409526f16f97e3645485",
+          "git_sha": "61bcecaa2f17368fe22f8c71905f10a9463b46f8"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part007.bin",
+          "bytes": 131072,
+          "sha256": "ee2dd7fffdaf5366744530a543ae2ec5410ecb54aec8f66146343982dae5194f",
+          "git_sha": "74c131e0e4de5bd17ac1b4666d3ef3eaa62e46df"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part008.bin",
+          "bytes": 131072,
+          "sha256": "80f033a8c5b7db4235bc356f826bff46a7a79ae680a72320bbf91decf91762f1",
+          "git_sha": "c7d73e9a8f52782336f107ae2926819f2ff331bd"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part009.bin",
+          "bytes": 131072,
+          "sha256": "79a958f5afc19ab08f30f26ea2f311e0bbc4ef58dcfb89d8b93e8b3d4db85354",
+          "git_sha": "9b3fb26aeac94ede382a4e1ae5bde8ecc623dabd"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part010.bin",
+          "bytes": 131072,
+          "sha256": "0765a4760dbeff5a7b9e1df0af151fc723c204926ca31966a89bf61c6cae6b4c",
+          "git_sha": "529ebcad05fa4733f0847be2b74a73070ab58b1a"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part011.bin",
+          "bytes": 131072,
+          "sha256": "0ddbee8b1722600da391b02004178f040c3f9bdf5c342468985d60be61a6fc1b",
+          "git_sha": "ddfb52850155cd1e9b39aa16c5988aca67c36089"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part012.bin",
+          "bytes": 131072,
+          "sha256": "d3f01d96f7cb43bb1888847e4b9d3ef8c9218967210ab327eacbb7d4b4770130",
+          "git_sha": "2bf5b4b2de4370c334183383b269609e4d66a324"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part013.bin",
+          "bytes": 131072,
+          "sha256": "5ca0e54a02b475eae89095b44e20a58966febdbf12d4d4b624de668cae104bea",
+          "git_sha": "ebb466db564567ad544c53b8ee925d611c4f6816"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part014.bin",
+          "bytes": 131072,
+          "sha256": "4d59f90cd1e1973d3bf2d7f197b780fcca3c669c0ff8c1720c7df03dc15f0977",
+          "git_sha": "7ae306c6be3f75123f9fd3bcc64c98143aba52df"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part015.bin",
+          "bytes": 131072,
+          "sha256": "054b247fad9810941c5a7234d86bfd143e290fea5d6fe7a0292876fa7e984ac9",
+          "git_sha": "8064759c3a89a2500d2d288b82d8486a157ddbb5"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part016.bin",
+          "bytes": 131072,
+          "sha256": "dc79a4a6470de5871c9d10a0a12fe05081576369661b353f60381149e5c17e11",
+          "git_sha": "615d777c888f58c5fa2723808f5a511944a1e7ef"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part017.bin",
+          "bytes": 131072,
+          "sha256": "74ff826a3de72a8c23a38697dff50fc510c9e3a113748e0f6080505ae7f9921b",
+          "git_sha": "aca449cb1481f7d6e0a61eef380b12221d0b6b3a"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part018.bin",
+          "bytes": 131072,
+          "sha256": "5fad0b5b94c4eccf4632e92803b47d674e185216940ef7d392377ec0d967cf37",
+          "git_sha": "a61488b2286d50f090a0b4c4fb0a5d5a2e0c94b5"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part019.bin",
+          "bytes": 131072,
+          "sha256": "1fff1b35344cc4b57e24a315524bd1281ced199f3184a6f27e8b104716652958",
+          "git_sha": "978fa064f21ec24548bf9988d282db83890839ea"
+        },
+        {
+          "path": "parts/girl_avatar_v2.part020.bin",
+          "bytes": 93085,
+          "sha256": "74b7a955ddd9f79f582d5cddaa435ef4b25069555d9e6c9c8d383b748e41af6f",
+          "git_sha": "a8709bab4b7c8d96e05dd1cb59c42832aea8b769"
+        }
+      ]
+    },
+    {
+      "file": "boy_avatar_v2.glb",
+      "bytes": 5130916,
+      "triangles": 237354,
+      "meshes": 94,
+      "sha256": "f2ff659acb454bebb291b059130653c793364ad60f9fd634796dd5e51a88df43",
+      "source_sha256": "92fd293f9d0ddedee6dee05b6526c9ebab97f4229039a6927354219945cca9b2",
+      "bounds": [
+        [
+          -0.2559879720211029,
+          0.011512535624206066,
+          -0.18400000035762787
+        ],
+        [
+          0.2559879720211029,
+          1.3680000305175781,
+          0.12748827040195465
+        ]
+      ],
+      "compressed_bytes": 2714982,
+      "compressed_sha256": "c7c69ccfd80d71feeacad582c29583f1bfb8e689b0b93e44892ae98b1413fae7",
+      "parts": [
+        {
+          "path": "parts/boy_avatar_v2.part001.bin",
+          "bytes": 131072,
+          "sha256": "c5695409f340dba05c63ee99f0c561a42ab744db3863ad8bb183c9a942024b3c",
+          "git_sha": "55e6c49b3ac15adc4d9db613fa89fbbad4af970d"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part002.bin",
+          "bytes": 131072,
+          "sha256": "7d869725e75df95f44dea751ac1e8f26d86ec5a8fa0e0de5a949d5deb6ff1d26",
+          "git_sha": "aeab889e9cf91e5547373b9bc30b35594349a934"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part003.bin",
+          "bytes": 131072,
+          "sha256": "59e73e0637b237e634ada9b13807564f6289d2b405724fb10f01692ea0b7c4b5",
+          "git_sha": "1312127f451bced00e25c954ef72efd06af7c63f"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part004.bin",
+          "bytes": 131072,
+          "sha256": "00508e7858f89dd5367ee2023602efd1408561f53d2d6f9e03a6b5217b95f615",
+          "git_sha": "0fb9318ab1bd1e0a91a400634f6443cba8495f32"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part005.bin",
+          "bytes": 131072,
+          "sha256": "661ee1ba0c6cdb5ffadb708ca2a10f3339bc702de9ea901b34e8502c54aff02f",
+          "git_sha": "c5a06b8415eeff406dca247529b63a11119678f8"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part006.bin",
+          "bytes": 131072,
+          "sha256": "2b57ecea47c7495ca365461a87c9a5a36bc7527df9452930b3bab58236c944e8",
+          "git_sha": "c040fdf05570fc1290acaff2bd85fc476befbe15"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part007.bin",
+          "bytes": 131072,
+          "sha256": "ff7e6587c665a9f775fc1eae348346c77f92c224747beb3233ae795905556d86",
+          "git_sha": "6c49091acc396a52ee649518afc6789c41132df7"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part008.bin",
+          "bytes": 131072,
+          "sha256": "fe7d73b6eb527b7e325f63f822ddb997335ee6f6eee8e69763c286ef6ea6e09d",
+          "git_sha": "8ace524aeccae6591719108dfb362afab1628860"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part009.bin",
+          "bytes": 131072,
+          "sha256": "7454f2c2e0b3a2ab2797f723821feb37649306c06a3cb02381f84d23b5c3ead0",
+          "git_sha": "6a738cdc0ffb7e4bbb496e4284a55d99cbe14147"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part010.bin",
+          "bytes": 131072,
+          "sha256": "ad92a6dda2deb23e2603ba97c8be413633176bab2252d8726363dde6ce45e64f",
+          "git_sha": "8429897c8cd0aae886ecbe06ab72dbad0a9a9dc8"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part011.bin",
+          "bytes": 131072,
+          "sha256": "3715232546070c43848d8ad0a00931fcbf883a5b4c3963371535728896d55df9",
+          "git_sha": "744abb9dfbc99b48ffec00a4eef830bb73596d4e"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part012.bin",
+          "bytes": 131072,
+          "sha256": "3a5a09bd2c9d88ddbdefa88f66734dc20312618859e0d0eca5c2968108f844d7",
+          "git_sha": "56f0f7b154d8dc4d0e4001ab031f4e4150f039b0"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part013.bin",
+          "bytes": 131072,
+          "sha256": "62137d9947fc7fdccefe7773648d8c0ac24ae1a23a4a1f5d89a88187a2717957",
+          "git_sha": "792e4925e1bf3f1428cf29b7c4bbb760aefaeb47"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part014.bin",
+          "bytes": 131072,
+          "sha256": "9b8e853e1bb4f2223d93b235d3c60ef3fb3b6b1f7b56fbfbf19ac30c0710c063",
+          "git_sha": "3f521d078e6bfa56d90938bd6ec9096a3139e499"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part015.bin",
+          "bytes": 131072,
+          "sha256": "65c37d2e5a9495e00e64a5f733ba9af8b9bf2db359aeedd045807beb2d3e1255",
+          "git_sha": "96222c38cd2e0c6d48fa269251bf0bc47dba41cc"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part016.bin",
+          "bytes": 131072,
+          "sha256": "9a67e739bf3d32725f73dab01465ba46c23c566c8a962d3d86396204ed4766e4",
+          "git_sha": "30f6b29100bcf4d4780563e8d5cbf1d9d48819aa"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part017.bin",
+          "bytes": 131072,
+          "sha256": "da3f0b538fe61d3e1c6db963e5c2a349a42eb9a50347ebc974ae6be5509a85de",
+          "git_sha": "f1233c0fc25ead2e2a379566da7e98f64762b882"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part018.bin",
+          "bytes": 131072,
+          "sha256": "022ba82ddf6128e93a6c25e42c6ad0f10fa656f3276e9b12c4a7711aacd5a95f",
+          "git_sha": "faa72d57d45917aab056d5d8e9093c0116d6c1a3"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part019.bin",
+          "bytes": 131072,
+          "sha256": "126964389163d14280bfa26c0c9f2ac7cc016c04a238c9f487e2bde57a5542da",
+          "git_sha": "08947c4cb8a625ae286c32cb3263130578822009"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part020.bin",
+          "bytes": 131072,
+          "sha256": "7b163cdd8ac55e3319c99c563dc7371f9f2c9e05d2ea399c31840a7d0ad3ff65",
+          "git_sha": "c485d572869221b18eb95f4f3f970cf4ecc3f488"
+        },
+        {
+          "path": "parts/boy_avatar_v2.part021.bin",
+          "bytes": 93542,
+          "sha256": "49b65cc9736b87a0bc2f70a5a96cc580d4298ea74832eb27ec077f71a37fb522",
+          "git_sha": "7f818c6f877958c48c6696f63679e7929b994b18"
+        }
+      ]
+    }
+  ]
+}

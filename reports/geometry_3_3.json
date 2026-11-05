@@ -1,0 +1,24 @@
+{
+  "models": [
+    {
+      "name": "girl",
+      "finite_vertices_and_normals": true,
+      "indices_in_range": true,
+      "hair_closed": true,
+      "hair_consistent_winding": true,
+      "hair_positive_volume": true,
+      "meshes": 119,
+      "triangles": 213910
+    },
+    {
+      "name": "boy",
+      "finite_vertices_and_normals": true,
+      "indices_in_range": true,
+      "hair_closed": true,
+      "hair_consistent_winding": true,
+      "hair_positive_volume": true,
+      "meshes": 94,
+      "triangles": 237354
+    }
+  ]
+}
