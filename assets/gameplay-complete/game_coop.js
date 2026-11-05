@@ -217,9 +217,9 @@ function detonate(bomb){
   // The player's own bomb is dangerous even during ordinary contact invulnerability.
   const playerDistance=Math.hypot(player.position.x-center.x,player.position.z-center.z);
   if(playerDistance<=COOP_BLAST_RADIUS){
-    const damage=playerDistance<2.1?5:playerDistance<3.8?3:2;
-    lives=Math.max(0,lives-damage);invul=INVULNERABILITY;avatar.hit();hud();
-    notice(damage>=5?'Бомба слишком близко!':`Взрыв! −${damage} жизни`,2);
+    // Any single bomb explosion costs exactly one life, regardless of distance.
+    lives=Math.max(0,lives-1);invul=INVULNERABILITY;avatar.hit();hud();
+    notice('Взрыв! −1 жизнь',2);
     const away=player.position.clone().sub(center).setY(0);
     if(away.lengthSq()<.001)away.set(Math.sin(heading),0,Math.cos(heading));
     away.normalize();
