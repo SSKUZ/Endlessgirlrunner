@@ -1,24 +1,44 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><title>3D аватар — демо</title><style>
-*{box-sizing:border-box}body{margin:0;background:#e6e9f3;font:16px system-ui;color:#263047;overflow:hidden}canvas{display:block;touch-action:none}.ui{position:fixed;left:0;right:0;bottom:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:0 12px}button{border:0;border-radius:18px;background:#fff;padding:14px 19px;font-size:16px;box-shadow:0 4px 16px #0002}button.active{background:#ffe27d}.title{position:fixed;top:18px;left:18px;font-weight:700}.hint{position:fixed;top:49px;left:18px;font-size:13px;color:#5c6578}</style></head><body><div class="title">3D аватар • первый прототип</div><div class="hint">Проведи пальцем — повернуть • два пальца — приблизить</div><div class="ui"><button id="walk">🚶 Идти</button><button id="look">👀 Оглянуться</button><button id="stop">⏸ Стоп</button></div><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"}}</script><script type="module">
+*{box-sizing:border-box}body{margin:0;background:#e6e9f3;font:16px system-ui;color:#263047;overflow:hidden}canvas{display:block;touch-action:none}.ui{position:fixed;left:0;right:0;bottom:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:0 12px}button{border:0;border-radius:18px;background:#fff;padding:14px 19px;font-size:16px;box-shadow:0 4px 16px #0002}button.active{background:#ffe27d}.title{position:fixed;top:18px;left:18px;font-weight:700}.hint{position:fixed;top:49px;left:18px;font-size:13px;color:#5c6578}</style></head><body><div class="title">3D аватар • мультяшная версия</div><div class="hint">Проведи пальцем — повернуть • два пальца — приблизить</div><div class="ui"><button id="walk">🚶 Идти</button><button id="look">👀 Оглянуться</button><button id="stop">⏸ Стоп</button></div><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"}}</script><script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 const scene=new THREE.Scene();scene.background=new THREE.Color('#e8edf6');const camera=new THREE.PerspectiveCamera(36,innerWidth/innerHeight,.1,100);camera.position.set(0,2.0,6.5);
 const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;document.body.appendChild(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xffffff,0xa1a5b0,2.3));const light=new THREE.DirectionalLight(0xffffff,2.5);light.position.set(-3,7,5);light.castShadow=true;scene.add(light);
 const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,1.35,0);controls.enableDamping=true;controls.minDistance=2.6;controls.maxDistance=10;controls.maxPolarAngle=Math.PI*.85;controls.update();
-const mat=(c,roughness=1)=>new THREE.MeshStandardMaterial({color:c,roughness});const yellow=mat('#e6d781'),pants=mat('#e9d782'),skin=mat('#f2c8ae'),hair=mat('#654332'),sock=mat('#fafafa'),black=mat('#29232b'),pink=mat('#e64f72');
+const mat=(c,roughness=1)=>new THREE.MeshStandardMaterial({color:c,roughness});const yellow=mat('#e7d88f'),pants=mat('#e6d17b'),skin=mat('#f4ceb9'),hair=mat('#654637'),sock=mat('#fafafa'),black=mat('#29232b'),pink=mat('#e64f72');const iris=mat('#51402e'),white=mat('#fff9ef'),lip=mat('#b56f72'),blush=mat('#f0b1a8');
 function ell(parent,name,color,pos,scale){const m=new THREE.Mesh(new THREE.SphereGeometry(1,24,16),color);m.name=name;m.position.set(...pos);m.scale.set(...scale);m.castShadow=true;parent.add(m);return m}
 const root=new THREE.Group();scene.add(root);const body=new THREE.Group();root.add(body);
 ell(body,'Футболка',yellow,[0,1.72,0],[.42,.52,.24]);ell(body,'Шея',skin,[0,2.21,0],[.105,.15,.11]);
 const head=new THREE.Group();head.position.set(0,2.49,0);body.add(head);
-ell(head,'Лицо',skin,[0,0,0],[.30,.36,.27]);ell(head,'Волосы сверху',hair,[0,.20,-.06],[.32,.22,.28]);ell(head,'Чёлка',hair,[-.11,.25,.16],[.21,.12,.12]);
-for(const s of [-1,1]){ell(head,'Глаз',black,[s*.12,.035,.253],[.026,.035,.014]);ell(head,'Щека',mat('#e8a89c'),[s*.19,-.10,.205],[.06,.032,.014]);ell(head,'Ухо',skin,[s*.305,-.035,0],[.048,.083,.048]);}
-ell(head,'Нос',skin,[0,-.065,.269],[.035,.04,.026]);ell(head,'Улыбка',mat('#a85e5c'),[0,-.18,.255],[.09,.014,.012]);
-ell(head,'Коса',hair,[.29,-.27,-.07],[.11,.38,.12]);ell(head,'Резинка',pink,[.29,-.42,-.05],[.12,.04,.12]);
+ell(head,'Лицо',skin,[0,0,0],[.315,.365,.275]);
+ell(head,'Затылок',hair,[0,.115,-.13],[.33,.34,.23]);
+ell(head,'Верх волос',hair,[0,.292,-.055],[.33,.145,.27]);
+ell(head,'Пробор',mat('#9b7255'),[-.085,.378,.15],[.014,.018,.105]);
+ell(head,'Прядь слева',hair,[-.225,.20,.15],[.095,.22,.11]);
+ell(head,'Прядь справа',hair,[.245,.16,.095],[.07,.20,.10]);
+for(const s of [-1,1]){
+ ell(head,'Белок глаза',white,[s*.125,.035,.253],[.075,.055,.026]);
+ ell(head,'Радужка',iris,[s*.125,.03,.276],[.038,.043,.014]);
+ ell(head,'Зрачок',black,[s*.125,.03,.289],[.021,.028,.008]);
+ ell(head,'Блик',white,[s*.115,.049,.297],[.009,.011,.006]);
+ ell(head,'Бровь',hair,[s*.128,.137,.247],[.078,.013,.015]);
+ ell(head,'Румянец',blush,[s*.215,-.105,.205],[.065,.035,.012]);
+ ell(head,'Ухо',skin,[s*.309,-.035,0],[.045,.08,.05]);
+ ell(head,'Серьга',white,[s*.321,-.087,.037],[.014,.014,.013]);
+}
+ell(head,'Нос',skin,[0,-.058,.283],[.042,.048,.032]);
+ell(head,'Улыбка',lip,[0,-.177,.259],[.095,.015,.013]);
+const braid=new THREE.Group();braid.position.set(-.29,-.13,-.08);head.add(braid);
+for(let i=0;i<6;i++){ell(braid,'Звено косы '+i,hair,[-.02-i*.012,-i*.105,0],[.09-i*.007,.092-i*.005,.09-i*.006]);}
+ell(braid,'Розовая резинка',pink,[-.08,-.57,0],[.045,.032,.045]);
+ell(braid,'Кончик косы',hair,[-.085,-.65,0],[.05,.095,.05]);
 const arms=[],legs=[];for(const s of [-1,1]){const arm=new THREE.Group();arm.position.set(s*.43,2.01,0);body.add(arm);ell(arm,'Рукав',yellow,[s*.09,-.13,0],[.17,.20,.19]);ell(arm,'Рука',skin,[s*.13,-.43,0],[.105,.32,.10]);arms.push(arm);
 const leg=new THREE.Group();leg.position.set(s*.20,1.22,0);body.add(leg);ell(leg,'Штаны',pants,[0,-.46,0],[.23,.52,.22]);ell(leg,'Носок',sock,[0,-.97,.10],[.15,.15,.27]);legs.push(leg);}
 ell(body,'Пояс',pants,[0,1.25,0],[.40,.20,.24]);
+const ink=mat('#37302d');for(let i=0;i<3;i++){ell(body,'Рисунок зайчик '+i,ink,[.17+i*.072,1.82+(i%2)*.013,.234],[.019,.034,.008]);}
+const watch=mat('#e8a4aa');ell(arms[1],'Розовые часы',watch,[.13,-.61,.01],[.12,.07,.115]);
 const floor=new THREE.Mesh(new THREE.CircleGeometry(2.4,64),mat('#d9dfea'));floor.rotation.x=-Math.PI/2;floor.position.y=-.04;scene.add(floor);
 let mode='idle',t=0;const buttons=['walk','look','stop'];function setMode(v){mode=v;t=0;buttons.forEach(k=>document.getElementById(k).classList.toggle('active',k===v));}
 document.getElementById('walk').onclick=()=>setMode('walk');document.getElementById('look').onclick=()=>setMode('look');document.getElementById('stop').onclick=()=>setMode('stop');
