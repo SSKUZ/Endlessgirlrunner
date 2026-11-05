@@ -33,6 +33,7 @@ let level=0,score=0,totalScore=0,lives=5,spawn=.6,shot=0,invul=0,time=0,pendingT
 let catList=[],shots=[],catPool=[],shotPools={sausage:[],plane:[],bomb:[]},firing=false;
 let boss=null,bossDefeated=false;
 let gift=null,giftTimer=12,rapidFireUntil=0,shieldCharges=0;
+let interactives=[];
 let levelStars=[],levelStartLives=5,levelStartTime=0,levelBombsUsed=0;
 let bombSelected=false,nextCatId=1,nextCatVariant=0,effects=[],effectPool=[],tutorialIndex=0,tutorialTimer=0;
 let heading=0,cameraYaw=0,cameraPitch=.27,cameraDistance=5,noticeUntil=0;
@@ -110,10 +111,10 @@ function tutorial(dt){
 }
 function recycleCat(cat){world.remove(cat.o);cat.o.visible=false;catPool.push(cat);}
 function recycleShot(s){world.remove(s.o);s.o.visible=false;shotPools[s.kind].push(s.o);}
-function clearActors(){if(gift){world.remove(gift.o);gift=null;}if(boss){world.remove(boss.o);boss=null;}bossDefeated=false;catList.forEach(recycleCat);shots.forEach(recycleShot);effects.forEach(e=>{world.remove(e.o);effectPool.push(e.o);});catList=[];shots=[];effects=[];pendingThrow=null;}
+function clearActors(){for(const prop of interactives)world.remove(prop.o);interactives=[];if(gift){world.remove(gift.o);gift=null;}if(boss){world.remove(boss.o);boss=null;}bossDefeated=false;catList.forEach(recycleCat);shots.forEach(recycleShot);effects.forEach(e=>{world.remove(e.o);effectPool.push(e.o);});catList=[];shots=[];effects=[];pendingThrow=null;}
 function build(){
   clearActors();if(environment){world.remove(environment);environment.userData.dispose?.();}
-  environment=buildEnvironment(level);world.add(environment);
+  environment=buildEnvironment(level);world.add(environment);createInteractives();
   scene.background.set(levels[level].color);scene.fog=new T.Fog(levels[level].color,26,70);
 }
 function startLevel(){
@@ -252,6 +253,7 @@ function detonate(bomb){
   const o=effectPool.pop()||createExplosion();
   o.position.set(center.x,0,center.z);o.visible=true;o.scale.setScalar(COOP_BLAST_RADIUS/3);
   o.userData.tick(0);world.add(o);effects.push({o,age:0});
+  for(const prop of interactives)if(insideExplosion(center,prop.o.position,COOP_BLAST_RADIUS))strikeInteractive(prop,1.8);
   if(boss&&insideExplosion(center,boss.o.position,COOP_BLAST_RADIUS+1.1))hitBoss('bomb');
   for(const cat of catList){
     if(cat.flee||!insideExplosion(center,cat.o.position,COOP_BLAST_RADIUS))continue;
@@ -366,6 +368,39 @@ function makeGift(){
   bow.position.y=.88;bow.rotation.x=Math.PI/2;o.add(bow);
   return o;
 }
+function createInteractives(){
+  const colors={box:'#c98b52',bin:'#668f92',bush:'#4d9c64'};
+  for(let i=0;i<9;i++){
+    const kind=['box','bin','bush'][i%3],o=new T.Group();
+    const mat=new T.MeshStandardMaterial({color:colors[kind],roughness:.8});
+    let body;
+    if(kind==='bush'){body=new T.Mesh(new T.SphereGeometry(.58,9,7),mat);body.position.y=.52;}
+    else{body=new T.Mesh(new T.BoxGeometry(kind==='bin'?.8:.95,kind==='bin'?1.05:.75,kind==='bin'?.8:.95),mat);body.position.y=kind==='bin'?.53:.39;}
+    body.castShadow=true;o.add(body);
+    let lid=null;
+    if(kind==='bin'){
+      lid=new T.Mesh(new T.BoxGeometry(.97,.12,.97),new T.MeshStandardMaterial({color:'#405c61'}));
+      lid.position.y=1.1;o.add(lid);
+    }
+    const x=(i%2?1:-1)*(3.4+(i%3)*1.1),z=-19+i*5.1;
+    o.position.set(x,0,z);world.add(o);
+    interactives.push({o,body,lid,kind,react:0,spin:0,originY:0});
+  }
+}
+function strikeInteractive(prop,force=1){
+  prop.react=1;prop.spin=(Math.random()>.5?1:-1)*force;
+}
+function updateInteractives(dt){
+  for(const p of interactives){
+    p.react=Math.max(0,p.react-dt*1.65);
+    const wave=Math.sin(p.react*Math.PI);
+    p.body.rotation.z=p.spin*wave*(p.kind==='box'?.9:.35);
+    p.body.rotation.x=wave*(p.kind==='bush'?.3:.12);
+    if(p.lid){p.lid.position.y=1.1+wave*.7;p.lid.rotation.x=wave*.65;}
+    if(p.kind==='box')p.body.position.y=.39+wave*.25;
+    if(p.kind==='bush')p.body.scale.setScalar(1+wave*.22);
+  }
+}
 function updateGifts(dt){
   if(gift){
     gift.age+=dt;gift.o.rotation.y+=dt*1.7;gift.o.position.y=Math.sin(gift.age*3)*.09;
@@ -478,6 +513,12 @@ function updateShots(dt){
       if(candidate&&(!impact||candidate.fraction<impact.fraction))impact={cat:c,...candidate};
     }
     if(impact)flee(impact.cat,true,impact.head?'head':'body',impact.point,!!s.companion,s.kind);
+    let propImpact=false;
+    if(!impact){for(const prop of interactives){
+      const p=prop.o.position,a=s.previous,b=s.o.position;
+      const vx=b.x-a.x,vz=b.z-a.z,t=clamp(((p.x-a.x)*vx+(p.z-a.z)*vz)/Math.max(1e-8,vx*vx+vz*vz),0,1);
+      if(Math.hypot(a.x+vx*t-p.x,a.z+vz*t-p.z)<.7&&Math.min(a.y,b.y)<1.5&&Math.max(a.y,b.y)>.15){strikeInteractive(prop);propImpact=true;break;}
+    }}
     let bossImpact=false;
     if(!impact&&boss&&boss.hitCooldown<=0){
       const dx=s.o.position.x-boss.o.position.x,dz=s.o.position.z-boss.o.position.z;
@@ -487,7 +528,7 @@ function updateShots(dt){
       const horizontal=Math.hypot(px+vx*t,pz+vz*t);
       if(horizontal<1.1&&Math.min(s.previous.y,s.o.position.y)<2.6&&Math.max(s.previous.y,s.o.position.y)>.2){bossImpact=hitBoss('body');}
     }
-    if(impact||bossImpact||s.life<=0||s.o.position.y<.07){recycleShot(s);shots.splice(i,1);}
+    if(impact||propImpact||bossImpact||s.life<=0||s.o.position.y<.07){recycleShot(s);shots.splice(i,1);}
   }
   for(let i=effects.length-1;i>=0;i--){const e=effects[i];e.age+=dt;e.o.userData.tick(e.age);if(e.age>=1.1){world.remove(e.o);e.o.visible=false;effectPool.push(e.o);effects.splice(i,1);}}
 }
@@ -505,7 +546,7 @@ function animate(now){
   requestAnimationFrame(animate);const dt=Math.min(.04,(now-last)/1000);last=now;
   if(mode==='select')updateSelection(dt);
   else if(mode==='play'){
-    time+=dt;shot=Math.max(0,shot-dt);invul=Math.max(0,invul-dt);updateMovement(dt);updateCompanion(dt);updateGifts(dt);
+    time+=dt;shot=Math.max(0,shot-dt);invul=Math.max(0,invul-dt);updateMovement(dt);updateCompanion(dt);updateGifts(dt);updateInteractives(dt);
     if(firing)throwItem();if(pendingThrow){pendingThrow.delay-=dt;if(pendingThrow.delay<=0){const pending=pendingThrow;pendingThrow=null;releaseItem(pending);}}
     spawn-=dt;if(spawn<=0&&!transition){spawn=spawnCat()?levels[level].rate:.35;}
     updateCats(dt);updateBoss(dt);if(mode==='play')updateShots(dt);
