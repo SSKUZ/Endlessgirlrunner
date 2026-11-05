@@ -35,6 +35,20 @@ let boss=null,bossDefeated=false;
 let gift=null,giftTimer=12,rapidFireUntil=0,shieldCharges=0;
 let interactives=[];
 let levelStars=[],levelStartLives=5,levelStartTime=0,levelBombsUsed=0;
+const achievements=[['first','Первый кот','Прогнать первого кота'],['ten','Кошачья гроза','Прогнать 10 котов'],['fifty','Гроза района','Прогнать 50 котов'],['sniper','Меткий бросок','Сделать 5 хедшотов'],['stars','Звёздный герой','Получить 3 звезды за уровень'],['gift','Сюрприз!','Подобрать подарок'],['boss','Победитель Котокороля','Победить финального босса'],['finish','Спасатели парка','Пройти все 5 уровней']];
+let unlocked=new Set();
+function unlockAchievement(id){
+  if(unlocked.has(id))return;
+  const item=achievements.find(a=>a[0]===id);if(!item)return;
+  unlocked.add(id);reward('🏆 '+item[1],true);
+  try{localStorage.setItem('cat-invasion-achievements',JSON.stringify([...new Set([...JSON.parse(localStorage.getItem('cat-invasion-achievements')||'[]'),id])]));}catch(e){console.warn('Achievement storage unavailable',e);}
+}
+function checkAchievements(){
+  if(progress.totalKills>=1)unlockAchievement('first');
+  if(progress.totalKills>=10)unlockAchievement('ten');
+  if(progress.totalKills>=50)unlockAchievement('fifty');
+  if(progress.headshots>=5)unlockAchievement('sniper');
+}
 let bombSelected=false,nextCatId=1,nextCatVariant=0,effects=[],effectPool=[],tutorialIndex=0,tutorialTimer=0;
 let heading=0,cameraYaw=0,cameraPitch=.27,cameraDistance=5,noticeUntil=0;
 const cameraAnchor=new T.Vector3(),cameraPointers=new Map();let pinch=null;
@@ -133,7 +147,7 @@ function startGame(){
   companionGroup.visible=!!companion;
   mode='play';preview.visible=false;world.visible=true;player.visible=true;$('selection').hidden=true;$('end').hidden=true;
   $('hud').hidden=false;$('controls').hidden=false;$('item-symbol').textContent=items[itemIndex].key==='sausage'?'🌭':'✈️';
-  camera.fov=57;camera.updateProjectionMatrix();level=0;lives=5;levelStars=[];totalScore=0;time=0;progress.reset();bombSelected=false;tutorialIndex=0;tutorialTimer=0;resetInput();startLevel();
+  camera.fov=57;camera.updateProjectionMatrix();level=0;lives=5;levelStars=[];unlocked=new Set();totalScore=0;time=0;progress.reset();bombSelected=false;tutorialIndex=0;tutorialTimer=0;resetInput();startLevel();
 }
 function returnToMenu(){
   clearActors();resetInput();mode='select';step='hero';
@@ -149,15 +163,20 @@ function awardLevelStars(){
   // One star for completion, second for survival, third for an efficient run.
   const stars=1+(lost<=1?1:0)+(lost===0&&elapsed<=120&&levelBombsUsed<=5?1:0);
   levelStars[level]=stars;
+  if(stars===3)unlockAchievement('stars');
   progress.points+=stars*5;
   reward('УРОВЕНЬ ПРОЙДЕН: '+ '★'.repeat(stars)+'☆'.repeat(3-stars),true);
   hud();
 }
 function end(win){
+  if(win)unlockAchievement('finish');
   mode='end';$('tutorial').hidden=true;if(avatar)avatar.object.visible=true;resetInput();$('controls').hidden=true;$('end').hidden=false;
   $('end-title').textContent=win?'Котокороль побеждён!':'Коты взяли верх';
   const starsText=levelStars.map((n,i)=>`У${i+1}: ${'★'.repeat(n)}${'☆'.repeat(3-n)}`).join(' · ');
+  let saved=[];try{saved=JSON.parse(localStorage.getItem('cat-invasion-achievements')||'[]');}catch(e){}
+  const earned=achievements.filter(a=>saved.includes(a[0])).map(a=>'🏆 '+a[1]).join(' · ');
   $('end-score').textContent=win?`Все пять уровней пройдены. ${totalScore} котов убежали довольными! Очки: ${progress.points}, HEADSHOT: ${progress.headshots}. ${starsText}`:`Пройдено уровней: ${level}. Убежавших котов: ${totalScore}. Попробуем ещё? ${starsText}`;
+  $('end-score').textContent+=' | Достижения: '+(earned||'пока нет');
 }
 $('again').onclick=returnToMenu;
 function pause(){if(mode!=='play')return;mode='pause';resetInput();$('pause-screen').hidden=false;$('controls').hidden=true;}
@@ -179,7 +198,7 @@ function hitBoss(kind='body'){
   if(!boss||boss.hitCooldown>0)return false;
   boss.hp-=kind==='bomb'?2:1;boss.hitCooldown=.38;boss.o.userData.hit?.();
   boss.crown.rotation.z+=.35;reward('👑 '+Math.max(0,boss.hp)+'/6',true);
-  if(boss.hp<=0){awardLevelStars();world.remove(boss.o);boss=null;bossDefeated=true;transition=1.5;notice('КОТОКОРОЛЬ ПОБЕЖДЁН!',2);}
+  if(boss.hp<=0){unlockAchievement('boss');awardLevelStars();world.remove(boss.o);boss=null;bossDefeated=true;transition=1.5;notice('КОТОКОРОЛЬ ПОБЕЖДЁН!',2);}
   return true;
 }
 function spawnCat(){
@@ -212,6 +231,7 @@ function flee(cat,award=true,kind='body',point=null,fromCompanion=false,weapon='
     if(result.counted&&kind==='head'&&!fromCompanion){reward('HEADSHOT! +2',false,point);tutorialAction(5);}
     else if(result.counted&&kind==='body'&&point)reward('+1',false,point);
     if(result.bonusBomb)reward('+1 БОМБОЧКА!',true);
+    if(result.counted)checkAchievements();
     hud();if(progress.complete&&!transition){
       if(level===4){spawnBoss();}else{awardLevelStars();transition=1.25;notice('Отлично! Идём дальше…',1.2);}
     }
@@ -410,7 +430,7 @@ function updateGifts(dt){
       else if(choice===1){progress.bombs+=3;notice('🎁 +3 бомбочки!',2);}
       else if(choice===2){rapidFireUntil=time+12;notice('🎁 Быстрые броски: 12 секунд!',2);}
       else{shieldCharges++;notice('🎁 Щит от одного удара!',2);}
-      hud();world.remove(gift.o);gift=null;giftTimer=14+Math.random()*8;
+      unlockAchievement('gift');hud();world.remove(gift.o);gift=null;giftTimer=14+Math.random()*8;
     }else if(gift.age>16){world.remove(gift.o);gift=null;giftTimer=10;}
     return;
   }
