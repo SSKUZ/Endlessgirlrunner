@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#233d3b">
+  <title>Захар и Мира: Котонашествие — V2</title>
+  <link rel="stylesheet" href="assets/gameplay-v2/styles.css?v=4">
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"}}</script>
+</head>
+<body>
+  <main id="selection" class="selection">
+    <header class="masthead"><span class="eyebrow">ЗАХАР И МИРА</span><h1>Котонашествие</h1><p id="step-label">01 / ВЫБЕРИ ГЕРОЯ</p></header>
+    <button id="back" class="back" type="button" hidden aria-label="Назад к персонажам">←</button>
+    <div id="carousel" class="carousel" aria-label="Свайп для выбора">
+      <button id="previous" class="arrow previous" type="button" aria-label="Предыдущий">‹</button>
+      <button id="next" class="arrow next" type="button" aria-label="Следующий">›</button>
+    </div>
+    <section class="selection-footer">
+      <div id="dots" class="dots" aria-hidden="true"><i class="active"></i><i></i></div>
+      <h2 id="choice-name">МИРА</h2><p id="choice-description">Смелость, косичка и отличный бросок.</p>
+      <p id="loading" role="status" aria-live="polite">Загружаем 3D-персонажей…</p>
+      <button id="select" class="primary" type="button" disabled>ВЫБРАТЬ ПЕРСОНАЖА <span>→</span></button>
+      <button id="retry" class="text-button" type="button" hidden>ПОВТОРИТЬ ЗАГРУЗКУ</button>
+      <small>Свайпни или нажми стрелку</small>
+    </section>
+  </main>
+  <div id="hud" hidden>
+    <div class="level-line"><span id="level-number">01 / 05</span><strong id="level-name">Солнечный двор</strong><button id="pause" aria-label="Пауза" type="button">Ⅱ</button></div>
+    <div class="stats"><span id="hearts">♥ ♥ ♥ ♥ ♥</span><span id="score">0 / 8</span></div>
+    <div class="progress"><div id="progress-fill"></div></div>
+  </div>
+  <div id="notice" aria-live="polite"></div>
+  <div id="controls" hidden>
+    <div id="stick" aria-label="Джойстик движения"><span class="stick-ring"></span><span id="nub"></span></div>
+    <button id="fire" type="button" aria-label="Бросить предмет"><span id="item-symbol">🌭</span><b>БРОСОК</b></button>
+    <p class="control-hint">Остановись, чтобы осмотреть героя</p>
+  </div>
+  <section id="end" class="modal" hidden><div class="modal-card"><span class="eyebrow">КОТОНАШЕСТВИЕ</span><h2 id="end-title"></h2><p id="end-score"></p><button id="again" class="primary" type="button">ЕЩЁ РАЗ <span>↗</span></button></div></section>
+  <section id="pause-screen" class="modal" hidden><div class="modal-card"><span class="eyebrow">МОЖНО ВЫДОХНУТЬ</span><h2>Пауза</h2><p>Коты тоже немного отдохнут.</p><button id="resume" class="primary" type="button">ПРОДОЛЖИТЬ <span>→</span></button><button id="to-menu" class="text-button" type="button">К ВЫБОРУ ПЕРСОНАЖА</button></div></section>
+  <noscript>Для игры необходимо включить JavaScript в браузере.</noscript>
+  <script type="module" src="assets/gameplay-v2/game.js?v=4"></script>
+</body>
+</html>

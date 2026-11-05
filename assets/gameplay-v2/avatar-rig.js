@@ -48,7 +48,7 @@ export async function loadCharacter(name){
     if(y<.15){const w=smooth(.095,.16,y);return [[`foot${s}`,1-w],[`shin${s}`,w]];}
     const w=smooth(.302,.405,y);return [[`shin${s}`,1-w],[`thigh${s}`,w]];
   }
-  const headPattern=/head|cranium|ear_|eye|iris|lash|brow|(?:^|_)lip(?:_|$)|smile|nostril|hair|braid|elastic|glasses/;
+  const headPattern=/head|cranium|ear_|eye|iris|lash|brow|(?:^|_)lip(?:_|$)|smile|nostril|hair|braid|elastic|glasses|lock|strand|wisp|gathering/;
   source.traverse(o=>{
     if(!o.isMesh)return;
     const geometry=o.geometry.clone();geometry.applyMatrix4(o.matrixWorld);
