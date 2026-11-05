@@ -20,14 +20,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
-          ref: feature/high-fidelity-girl-character
+          ref: feature/cartoon-character-redesign
           path: model-src
       - name: Restore character GLBs
         run: |
-          python model-src/assets/characters/restore_characters.py
+          python model-src/assets/characters/restore_v2.py
           mkdir -p assets/characters
-          cp model-src/assets/characters/girl_avatar.glb assets/characters/
-          cp model-src/assets/characters/boy_avatar.glb assets/characters/
+          cp model-src/assets/characters/girl_avatar_v2.glb assets/characters/
+          cp model-src/assets/characters/boy_avatar_v2.glb assets/characters/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
