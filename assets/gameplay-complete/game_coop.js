@@ -197,10 +197,12 @@ function spawnCat(){
   cat.o.position.set(player.position.x+Math.sin(angle)*dist,0,player.position.z+Math.cos(angle)*dist);
   cat.speed=levels[level].speed;cat.phase=Math.random()*10;cat.flee=false;cat.life=0;cat.direction=new T.Vector3();
   cat.behaviourClock=Math.random()*2;cat.dodgeCooldown=1.5+Math.random()*2;cat.flankSign=Math.random()<.5?-1:1;
+  cat.reaction=null;cat.o.rotation.set(0,0,0);cat.o.scale.setScalar(1);
   world.add(cat.o);catList.push(cat);return true;
 }
 function flee(cat,award=true,kind='body',point=null,fromCompanion=false){
   if(cat.flee)return;cat.flee=true;cat.life=2.6;cat.o.userData.hit?.();
+  cat.reaction={kind:kind==='explosion'?'blast':kind==='plane'?'spin':kind==='sausage'?'flip':'hop',age:0,baseY:cat.o.position.y,baseScale:1};
   cat.direction.subVectors(cat.o.position,player.position).setY(0);
   if(cat.direction.lengthSq()<.01)cat.direction.set(Math.sin(heading+1),0,Math.cos(heading+1));cat.direction.normalize();
   if(award){
@@ -440,8 +442,17 @@ function updateCats(dt){
       else if(distance<.72&&invul>0)speed=0;
     }
     c.o.position.addScaledVector(dir,dt*speed);
-    if(dir.lengthSq()>.001)c.o.rotation.y=dampAngle(c.o.rotation.y,Math.atan2(dir.x,dir.z),10,dt);
+    if(dir.lengthSq()>.001&&!c.reaction)c.o.rotation.y=dampAngle(c.o.rotation.y,Math.atan2(dir.x,dir.z),10,dt);
     c.o.userData.animate(dt,speed,time+c.phase,c.flee);
+    if(c.reaction){
+      const r=c.reaction;r.age+=dt;const u=Math.min(1,r.age/1.25),arc=Math.sin(Math.PI*u);
+      if(r.kind==='flip'){c.o.rotation.x=u*Math.PI*2;c.o.position.y=r.baseY+arc*.85;}
+      else if(r.kind==='spin'){c.o.rotation.y+=dt*13;c.o.rotation.z=arc*.35;c.o.position.y=r.baseY+arc*.45;}
+      else if(r.kind==='blast'){c.o.rotation.z=u*Math.PI*2;c.o.rotation.x=arc*.7;c.o.position.y=r.baseY+arc*1.6;}
+      else{c.o.rotation.z=arc*.3;c.o.position.y=r.baseY+arc*.55;}
+      c.o.scale.setScalar(1+arc*.12);
+      if(u>=1){c.o.position.y=0;c.o.rotation.x=0;c.o.rotation.z=0;c.o.scale.setScalar(1);c.reaction=null;}
+    }
   }
 }
 function updateShots(dt){
@@ -466,7 +477,7 @@ function updateShots(dt){
       const candidate=intersectProjectileCat(c.o,s.kind,s.previous,s.o.position,previousRotation,s.o.quaternion);
       if(candidate&&(!impact||candidate.fraction<impact.fraction))impact={cat:c,...candidate};
     }
-    if(impact)flee(impact.cat,true,impact.head?'head':'body',impact.point,!!s.companion);
+    if(impact)flee(impact.cat,true,s.kind,impact.point,!!s.companion);
     let bossImpact=false;
     if(!impact&&boss&&boss.hitCooldown<=0){
       const dx=s.o.position.x-boss.o.position.x,dz=s.o.position.z-boss.o.position.z;
