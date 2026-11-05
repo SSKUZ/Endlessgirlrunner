@@ -32,6 +32,17 @@ export function segmentSphere(a,b,c,r){
   const B=2*(ox*dx+oy*dy+oz*dz),disc=B*B-4*A*C;
   if(disc<0)return null;const t=(-B-Math.sqrt(disc))/(2*A);return t>=0&&t<=1?t:null;
 }
+export function segmentBox(a,b,min,max){
+  let enter=0,leave=1;
+  for(const axis of ['x','y','z']){
+    const start=a[axis],delta=b[axis]-start;
+    if(Math.abs(delta)<1e-12){if(start<min[axis]||start>max[axis])return null;continue;}
+    let first=(min[axis]-start)/delta,last=(max[axis]-start)/delta;
+    if(first>last)[first,last]=[last,first];
+    enter=Math.max(enter,first);leave=Math.min(leave,last);if(enter>leave)return null;
+  }
+  return enter;
+}
 export function sausageVelocity(height,targetDistance=null,catSpeed=0){
   const speed=9,gravity=9.8;
   let up=2.35;

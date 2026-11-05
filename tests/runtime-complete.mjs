@@ -38,11 +38,14 @@ avatar=avatar.replace("from 'three'",`from '${threeURL}'`).replace("from 'three/
 avatar=avatar.replace(/const gltf=await loader\.loadAsync\([^\n]+\);/,"const gltf=await loader.parseAsync(globalThis.__completeModels[name], '');");
 const avatarURL=dataURL(avatar);
 const propsURL=dataURL((await readFile(path.join(source,'props.js'),'utf8')).replace("from 'three'",`from '${threeURL}'`));
+const hitsURL=dataURL((await readFile(path.join(source,'cat-hits.js'),'utf8')).replace("from 'three'",`from '${threeURL}'`).replace("'./mechanics.mjs?v=body-hit-2'",JSON.stringify(pathToFileURL(path.join(source,'mechanics.mjs')).href)));
+const hitModule=await import(hitsURL);
 const awaitThree=await import(threeURL);globalThis.__propsModule=await import(propsURL);
 let game=await readFile(path.join(source,'game.js'),'utf8');
 game=game.replace("import * as T from 'three';",`import * as THREE from '${threeURL}';const T={...THREE,WebGLRenderer:globalThis.__FakeRenderer};`)
   .replace("'./avatar-rig.js'",JSON.stringify(avatarURL)).replace("'./props.js'",JSON.stringify(propsURL))
-  .replace("'./mechanics.mjs'",JSON.stringify(pathToFileURL(path.join(source,'mechanics.mjs')).href));
+  .replace("'./cat-hits.js?v=body-hit-2'",JSON.stringify(hitsURL))
+  .replace("'./mechanics.mjs?v=body-hit-2'",JSON.stringify(pathToFileURL(path.join(source,'mechanics.mjs')).href));
 game+=`\nexport {ensureCharacter,startGame,startLevel,returnToMenu,switchChoice,throwItem,releaseItem,updateCats,updateShots,spawnCat,flee};
 export const inspect=()=>({player,camera,rigs,avatar,progress,catList,shots,world,level,mode,lives,heading,cameraYaw,cameraDistance,moveAmount,heroIndex,itemIndex,step,pendingThrow});
 export function fixture(v){if('heading'in v){heading=v.heading;player.rotation.y=heading;}if('moving'in v)moveAmount=v.moving;if('shot'in v)shot=v.shot;if('level'in v)level=v.level;if('invul'in v)invul=v.invul;}
@@ -119,6 +122,37 @@ check('the actual head collider awards HEADSHOT and its two-point bonus',()=>{
 });
 check('contact cannot remove two lives during the protection window',()=>{
   app.startLevel();app.fixture({invul:0});app.spawnCat();app.spawnCat();const s=app.inspect();for(const c of s.catList)c.o.position.copy(s.player.position);const lives=s.lives;app.updateCats(.016);assert.equal(app.inspect().lives,lives-1);app.updateCats(.016);assert.equal(app.inspect().lives,lives-1);
+});
+check('torso, back, all paws and tail count as body hits for every coat and pose',()=>{
+  const T=awaitThree,props=globalThis.__propsModule;
+  for(let variant=0;variant<6;variant++)for(const pose of [0,.19,.43]){
+    const cat=props.createCat(variant);cat.position.set(1,0,4);cat.rotation.y=variant*.61;cat.userData.animate(pose+.03,1.3,pose,false);cat.updateMatrixWorld(true);
+    const torso=cat.children.find(o=>o.isMesh&&o.geometry.type==='SphereGeometry');
+    for(const q of [[0,0,0],[0,.75,-.6]]){
+      const start=torso.localToWorld(new T.Vector3(-3,q[1],q[2])),end=torso.localToWorld(new T.Vector3(3,q[1],q[2]));
+      const hit=hitModule.intersectCatSegment(cat,start,end,.075);assert.ok(hit,'body must register');assert.equal(hit.head,false);
+    }
+    const paws=[];let tail;
+    cat.traverse(o=>{if(o.isMesh&&o.geometry.type==='SphereGeometry'&&o.parent?.parent?.parent?.parent===cat)paws.push(o);if(o.isMesh&&o.geometry.type==='TubeGeometry')tail=o;});
+    assert.equal(paws.length,4);
+    for(const paw of paws){const point=paw.getWorldPosition(new T.Vector3()),start=point.clone().add(new T.Vector3(-.5,0,0)),end=point.clone().add(new T.Vector3(.5,0,0));const hit=hitModule.intersectCatSegment(cat,start,end,.075);assert.ok(hit,'paw must register');assert.equal(hit.head,false);}
+    const point=tail.localToWorld(tail.geometry.parameters.path.getPoint(.80));
+    const hit=hitModule.intersectCatSegment(cat,point.clone().add(new T.Vector3(-.6,0,0)),point.clone().add(new T.Vector3(.6,0,0)),.075);assert.ok(hit,'tail must register');assert.equal(hit.head,false);
+  }
+});
+check('first body contact wins over a head further along the same flight',()=>{
+  const T=awaitThree,cat=globalThis.__propsModule.createCat(1);
+  const hit=hitModule.intersectCatSegment(cat,new T.Vector3(0,.60,-2),new T.Vector3(0,.60,2),.075);assert.ok(hit);assert.equal(hit.head,false);
+  assert.equal(hitModule.intersectCatSegment(cat,new T.Vector3(1.5,.40,-2),new T.Vector3(1.5,.40,2),.075),null);
+});
+check('actual sausages and planes earn ordinary points for torso hits',()=>{
+  app.returnToMenu();app.startGame();
+  for(const kind of ['sausage','plane']){
+    app.startLevel();app.fixture({heading:0,moving:0});app.spawnCat();const state=app.inspect(),cat=state.catList[0];cat.o.position.set(0,0,4);cat.o.rotation.y=Math.PI;
+    app.releaseItem({kind});const shot=app.inspect().shots.at(-1);shot.o.position.set(-.8,.34,4);shot.o.rotation.set(0,0,0);shot.v.set(9,0,0);shot.gravity=0;shot.startY=.34;shot.yaw=Math.PI/2;shot.seed=0;
+    const points=state.progress.points,heads=state.progress.headshots,bombs=state.progress.bombs;
+    app.updateShots(.15);assert.equal(cat.flee,true,kind+' must hit torso');assert.equal(state.progress.points-points,1,kind+' body hit must not award HEADSHOT');assert.equal(state.progress.headshots,heads);assert.equal(state.progress.bombs,bombs);assert.equal(element('rewards').children.at(-1).textContent,'+1');
+  }
 });
 check('all six cat variants have finite articulated poses and individual colliders',()=>{
   const props=globalThis.__propsModule;for(let i=0;i<6;i++){const cat=props.createCat(i);for(let k=0;k<120;k++)cat.userData.animate(.016,.8+i*.3,k*.016,k>80);cat.updateMatrixWorld(true);cat.traverse(o=>assert.ok(o.matrixWorld.elements.every(Number.isFinite)));assert.ok(cat.userData.headRadius>0);}
