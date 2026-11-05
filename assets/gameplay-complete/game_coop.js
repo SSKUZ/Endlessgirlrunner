@@ -200,9 +200,9 @@ function spawnCat(){
   cat.reaction=null;cat.o.rotation.set(0,0,0);cat.o.scale.setScalar(1);
   world.add(cat.o);catList.push(cat);return true;
 }
-function flee(cat,award=true,kind='body',point=null,fromCompanion=false){
+function flee(cat,award=true,kind='body',point=null,fromCompanion=false,weapon='sausage'){
   if(cat.flee)return;cat.flee=true;cat.life=2.6;cat.o.userData.hit?.();
-  cat.reaction={kind:kind==='explosion'?'blast':kind==='plane'?'spin':kind==='sausage'?'flip':'hop',age:0,baseY:cat.o.position.y,baseScale:1};
+  cat.reaction={kind:kind==='explosion'?'blast':weapon==='plane'?'spin':weapon==='sausage'?'flip':'hop',age:0,baseY:cat.o.position.y,baseScale:1};
   cat.direction.subVectors(cat.o.position,player.position).setY(0);
   if(cat.direction.lengthSq()<.01)cat.direction.set(Math.sin(heading+1),0,Math.cos(heading+1));cat.direction.normalize();
   if(award){
@@ -477,7 +477,7 @@ function updateShots(dt){
       const candidate=intersectProjectileCat(c.o,s.kind,s.previous,s.o.position,previousRotation,s.o.quaternion);
       if(candidate&&(!impact||candidate.fraction<impact.fraction))impact={cat:c,...candidate};
     }
-    if(impact)flee(impact.cat,true,s.kind,impact.point,!!s.companion);
+    if(impact)flee(impact.cat,true,impact.head?'head':'body',impact.point,!!s.companion,s.kind);
     let bossImpact=false;
     if(!impact&&boss&&boss.hitCooldown<=0){
       const dx=s.o.position.x-boss.o.position.x,dz=s.o.position.z-boss.o.position.z;
