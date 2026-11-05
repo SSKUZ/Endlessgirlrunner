@@ -32,6 +32,7 @@ let heroIndex=0,itemIndex=0,step='hero',mode='select',environment=null,avatar=nu
 let level=0,score=0,totalScore=0,lives=5,spawn=.6,shot=0,invul=0,time=0,pendingThrow=null,transition=0;
 let catList=[],shots=[],catPool=[],shotPools={sausage:[],plane:[],bomb:[]},firing=false;
 let boss=null,bossDefeated=false;
+let levelStars=[],levelStartLives=5,levelStartTime=0,levelBombsUsed=0;
 let bombSelected=false,nextCatId=1,nextCatVariant=0,effects=[],effectPool=[],tutorialIndex=0,tutorialTimer=0;
 let heading=0,cameraYaw=0,cameraPitch=.27,cameraDistance=5,noticeUntil=0;
 const cameraAnchor=new T.Vector3(),cameraPointers=new Map();let pinch=null;
@@ -118,7 +119,7 @@ function startLevel(){
   companionGroup.position.set(1.8,0,-4.4);companionGroup.rotation.y=0;companionHeading=0;companionShot=3.5;
   player.position.set(0,0,-3);heading=0;player.rotation.y=0;cameraYaw=0;cameraPitch=.27;
   cameraAnchor.copy(player.position);cameraPointers.clear();pinch=null;
-  progress.startLevel(level);spawn=levels[level].rate;invul=1;transition=0;shot=0;build();hud();notice(`Уровень ${level+1} · ${levels[level].name}`,2.5);
+  progress.startLevel(level);levelStartLives=lives;levelStartTime=time;levelBombsUsed=0;spawn=levels[level].rate;invul=1;transition=0;shot=0;build();hud();notice(`Уровень ${level+1} · ${levels[level].name}`,2.5);
   camera.position.set(0,1+Math.sin(cameraPitch)*cameraDistance,-3-Math.cos(cameraPitch)*cameraDistance);camera.lookAt(0,1,-3);
 }
 function startGame(){
@@ -129,7 +130,7 @@ function startGame(){
   companionGroup.visible=!!companion;
   mode='play';preview.visible=false;world.visible=true;player.visible=true;$('selection').hidden=true;$('end').hidden=true;
   $('hud').hidden=false;$('controls').hidden=false;$('item-symbol').textContent=items[itemIndex].key==='sausage'?'🌭':'✈️';
-  camera.fov=57;camera.updateProjectionMatrix();level=0;lives=5;totalScore=0;time=0;progress.reset();bombSelected=false;tutorialIndex=0;tutorialTimer=0;resetInput();startLevel();
+  camera.fov=57;camera.updateProjectionMatrix();level=0;lives=5;levelStars=[];totalScore=0;time=0;progress.reset();bombSelected=false;tutorialIndex=0;tutorialTimer=0;resetInput();startLevel();
 }
 function returnToMenu(){
   clearActors();resetInput();mode='select';step='hero';
@@ -139,10 +140,21 @@ function returnToMenu(){
   $('end').hidden=true;$('pause-screen').hidden=true;$('hud').hidden=true;$('controls').hidden=true;$('selection').hidden=false;$('notice').textContent='';$('tutorial').hidden=true;
   camera.fov=46;camera.updateProjectionMatrix();selectionText();
 }
+function awardLevelStars(){
+  if(levelStars[level])return;
+  const lost=levelStartLives-lives,elapsed=time-levelStartTime;
+  // One star for completion, second for survival, third for an efficient run.
+  const stars=1+(lost<=1?1:0)+(lost===0&&elapsed<=120&&levelBombsUsed<=5?1:0);
+  levelStars[level]=stars;
+  progress.points+=stars*5;
+  reward('УРОВЕНЬ ПРОЙДЕН: '+ '★'.repeat(stars)+'☆'.repeat(3-stars),true);
+  hud();
+}
 function end(win){
   mode='end';$('tutorial').hidden=true;if(avatar)avatar.object.visible=true;resetInput();$('controls').hidden=true;$('end').hidden=false;
   $('end-title').textContent=win?'Котокороль побеждён!':'Коты взяли верх';
-  $('end-score').textContent=win?`Все пять уровней пройдены. ${totalScore} котов убежали довольными! Очки: ${progress.points}, HEADSHOT: ${progress.headshots}.`:`Пройдено уровней: ${level}. Убежавших котов: ${totalScore}. Попробуем ещё?`;
+  const starsText=levelStars.map((n,i)=>`У${i+1}: ${'★'.repeat(n)}${'☆'.repeat(3-n)}`).join(' · ');
+  $('end-score').textContent=win?`Все пять уровней пройдены. ${totalScore} котов убежали довольными! Очки: ${progress.points}, HEADSHOT: ${progress.headshots}. ${starsText}`:`Пройдено уровней: ${level}. Убежавших котов: ${totalScore}. Попробуем ещё? ${starsText}`;
 }
 $('again').onclick=returnToMenu;
 function pause(){if(mode!=='play')return;mode='pause';resetInput();$('pause-screen').hidden=false;$('controls').hidden=true;}
@@ -164,7 +176,7 @@ function hitBoss(kind='body'){
   if(!boss||boss.hitCooldown>0)return false;
   boss.hp-=kind==='bomb'?2:1;boss.hitCooldown=.38;boss.o.userData.hit?.();
   boss.crown.rotation.z+=.35;reward('👑 '+Math.max(0,boss.hp)+'/6',true);
-  if(boss.hp<=0){world.remove(boss.o);boss=null;bossDefeated=true;transition=1.5;notice('КОТОКОРОЛЬ ПОБЕЖДЁН!',2);}
+  if(boss.hp<=0){awardLevelStars();world.remove(boss.o);boss=null;bossDefeated=true;transition=1.5;notice('КОТОКОРОЛЬ ПОБЕЖДЁН!',2);}
   return true;
 }
 function spawnCat(){
@@ -196,7 +208,7 @@ function flee(cat,award=true,kind='body',point=null,fromCompanion=false){
     else if(result.counted&&kind==='body'&&point)reward('+1',false,point);
     if(result.bonusBomb)reward('+1 БОМБОЧКА!',true);
     hud();if(progress.complete&&!transition){
-      if(level===4){spawnBoss();}else{transition=1.25;notice('Отлично! Идём дальше…',1.2);}
+      if(level===4){spawnBoss();}else{awardLevelStars();transition=1.25;notice('Отлично! Идём дальше…',1.2);}
     }
   }
 }
@@ -204,6 +216,7 @@ function throwItem(){
   if(mode!=='play'||shot>0||pendingThrow||transition)return;
   const kind=bombSelected&&progress.bombs>0?'bomb':items[itemIndex].key;
   if(kind==='bomb'&&!progress.consumeBomb())return;
+  if(kind==='bomb')levelBombsUsed++;
   shot=kind==='bomb'?.75:kind==='sausage'?.43:.43;pendingThrow={delay:.17,kind};
   avatar.throw(kind,moveAmount>.15);if(kind!=='bomb')tutorialAction(2);hud();
 }
