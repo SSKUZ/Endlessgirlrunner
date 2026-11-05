@@ -27,19 +27,28 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: feature/gameplay-animation-v2
-          path: gameplay-src
+          path: work-original
       - name: Restore the original V2 characters
         run: |
           python model-src/assets/characters/restore_v2.py
           mkdir -p site/assets/characters site/assets/gameplay-v2
           cp model-src/assets/characters/girl_avatar_v2.glb site/assets/characters/
           cp model-src/assets/characters/boy_avatar_v2.glb site/assets/characters/
-      - name: Add V2 alongside the unchanged original game
+      - name: Retain Work original and every existing game version
         run: |
-          cp gameplay-src/game_v2.html site/game_v2.html
-          cp gameplay-src/game_v1_backup.html site/game_v1_backup.html
-          cp -R gameplay-src/assets/gameplay-v2/. site/assets/gameplay-v2/
+          cp work-original/game_v2.html site/game_work_original.html
+          cp -R work-original/assets/gameplay-v2/. site/assets/gameplay-v2/
           touch site/.nojekyll
+      - name: Check complete game publication files
+        run: |
+          test -s site/game_complete.html
+          test -s site/assets/gameplay-complete/game.js
+          test -s site/assets/gameplay-complete/avatar-rig.js
+          test -s site/assets/gameplay-complete/props.js
+          test -s site/assets/gameplay-complete/mechanics.mjs
+          test -s site/assets/gameplay-complete/styles.css
+          test -s site/assets/characters/girl_avatar_v2.glb
+          test -s site/assets/characters/boy_avatar_v2.glb
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
